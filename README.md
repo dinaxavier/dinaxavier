@@ -9,7 +9,7 @@
 </div>
 
 ##
-Sou uma profissional de dados com mais de 5 anos de experiência na área, focada principalmente em apoiar tomadas de decisões de negócios e aprimoramento de produtos, por meio da utilização dos dados. Possuo conhecimento avançado em SQL e Tableau e possuo habilidades no desenvolvimento de análises automatizadas e avaliações estatísticas em Python. Sou comunicativa e apaixonada pelas diversas aplicações dos dados, buscando continuamente expandir meu conhecimento e explorar cada vez mais suas diversas aplicações.
+Sou uma profissional de dados com mais de 5 anos de experiência na área, focada principalmente em apoiar tomadas de decisões de negócios e aprimoramento de produtos, por meio da utilização dos dados. Possuo conhecimento avançado em SQL e Tableau e possuo habilidades no desenvolvimento de análises automatizadas e avaliações estatísticas em Python. Sou comunicativa e apaixonada pelas diversas aplicações dos dados. Busco continuamente expandir meu conhecimento para explorar cada vez mais este universo.
 
 I'm a data professional with over 5 years of experience, primarily focused on supportingbusiness decision-making and product enhancement through data analysis. I possessadvanced expertise in SQL and Tableau, with a knowledge in developing automated analyses and statistical assessments using Python. I am a communicative individualdeeply passionate about the realm of data, continually seeking to expand my knowledge and explore its diverse applications.
      
