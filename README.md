@@ -9,9 +9,22 @@
 </div>
 
 ##
-Sou uma profissional de dados com mais de 5 anos de experiência na área, focada principalmente em apoiar tomadas de decisões de negócios e aprimoramento de produtos, por meio da utilização dos dados. Possuo conhecimento avançado em SQL e Tableau e possuo habilidades no desenvolvimento de análises automatizadas e avaliações estatísticas em Python. Sou comunicativa e apaixonada pelas diversas aplicações dos dados. Busco continuamente expandir meu conhecimento para explorar cada vez mais este universo.
+Sou uma cientista de dados com experiência no desenvolvimento e aplicação de soluções para resolver problemas complexos e melhorar resultados de negócios. Iniciei minha jornada de dados há cerca de 6 anos como Analista de dados, evoluindo para a Ciência de dados.
 
-I'm a data professional with over 5 years of experience, primarily focused on supportingbusiness decision-making and product enhancement through data analysis. I possessadvanced expertise in SQL and Tableau, with a knowledge in developing automated analyses and statistical assessments using Python. I am a communicative individualdeeply passionate about the realm of data, continually seeking to expand my knowledge and explore its diverse applications.
+Ao longo da minha carreira, atuei em projetos que geraram impacto na tomada de decisão e nos resultados das empresas. Minha expertise inclui desenvolvimento de modelos preditivos e de otimização, testes estatísticos e sistemas de recomendação, sempre com foco na geração de valor. Além disso, tenho sólida experiência em análise e visualização de dados, utilizando Python e SQL no dia a dia.
+
+Sou comunicativa e apaixonada pelo potencial transformador dos dados. Acredito que eles podem gerar mudanças positivas para a humanidade e outras espécies. No meu tempo livre, gosto de ler, aprender novas habilidades e estar ao ar livre em contato com animais.
+
+Atualmente focada em estudos voltados a mineração de padrões e sequências.
+
+(ENG)
+I am a data scientist with experience in developing and applying solutions to solve complex problems and improve business outcomes. I started my data journey about six years ago as a data analyst, eventually transitioning into data science.
+
+Throughout my career, I have worked on projects that drove impact in decision-making and business results. My expertise includes the development of predictive and optimization models, statistical testing, and recommendation systems—always with a strong focus on generating value. I also have solid experience in data analysis and visualization, working daily with Python and SQL.
+
+I am a communicative person and passionate about the transformative power of data. I believe data can drive positive change for humanity and other species. In my free time, I enjoy reading, learning new skills, and spending time outdoors with animals.
+
+Currently, I’m focused on studying pattern and sequence mining.
      
 <div style="display: inline_block"><br>
     <img align="center" alt="Dina-Python" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg">
