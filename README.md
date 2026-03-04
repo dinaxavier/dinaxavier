@@ -9,9 +9,9 @@
 </div>
 
 ##
-Sou uma cientista de dados com experiência no desenvolvimento e aplicação de soluções para resolver problemas complexos e melhorar resultados de negócios. Iniciei minha jornada de dados há cerca de 6 anos como Analista de dados, evoluindo para a Ciência de dados.
+Sou uma cientista de dados com experiência no desenvolvimento e aplicação de soluções para resolver problemas e melhorar resultados de negócios. Iniciei minha jornada de dados há cerca de 7 anos e já atuei como Analista de dados e atualmente, Cientista de dados.
 
-Ao longo da minha carreira, atuei em projetos que geraram impacto na tomada de decisão e nos resultados das empresas. Minha expertise inclui desenvolvimento de modelos preditivos e de otimização, testes estatísticos e sistemas de recomendação, sempre com foco na geração de valor. Além disso, tenho sólida experiência em análise e visualização de dados, utilizando Python e SQL no dia a dia.
+Ao longo da minha carreira, atuei em projetos focados na geração de impacto na tomada de decisão e nos resultados das empresas. Minha expertise inclui desenvolvimento de modelos preditivos e de otimização, testes estatísticos e sistemas de recomendação, sempre com foco na geração de valor. Além disso, tenho sólida experiência em análise e visualização de dados, utilizando Python e SQL no dia a dia, além de ferramentas de visualização.
 
 Sou comunicativa e apaixonada pelo potencial transformador dos dados. Acredito que eles podem gerar mudanças positivas para a humanidade e outras espécies. No meu tempo livre, gosto de ler, aprender novas habilidades e estar ao ar livre em contato com animais.
 
