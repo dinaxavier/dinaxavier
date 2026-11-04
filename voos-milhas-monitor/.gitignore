@@ -18,12 +18,16 @@ venv/
 ENV/
 env/
 
-# Dados (CSV)
-data/
-*.csv
+# Dados (CSV) - Comentado para permitir deploy
+# Descomentar se quiser evitar commits de dados:
+# data/
+# *.csv
+
+# Permitir apenas arquivos de configuração JSON
 *.json
 !package.json
 !tsconfig.json
+!data/*.json
 
 # Google Sheets (legado, não mais usado)
 credentials.json

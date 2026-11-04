@@ -1,0 +1,65 @@
+name: Atualizar Dados Semanalmente
+
+on:
+  schedule:
+    # Toda segunda-feira às 09:00 UTC (06:00 BRT)
+    - cron: '0 9 * * 1'
+  
+  # Permitir execução manual
+  workflow_dispatch:
+
+jobs:
+  buscar-voos:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Instalar dependências
+        working-directory: ./voos-milhas-monitor
+        run: npm install
+      
+      - name: Criar diretório de dados
+        working-directory: ./voos-milhas-monitor
+        run: mkdir -p data
+      
+      - name: Executar busca de voos
+        working-directory: ./voos-milhas-monitor
+        env:
+          KIWI_API_KEY: ${{ secrets.KIWI_API_KEY }}
+          CSV_DATA_DIR: ./data
+          ORIGENS: GRU,CGH,VCP
+          DESTINOS: CDG,LIS,BCN,FCO,MAD,LON
+        run: node testar-csv.js
+      
+      - name: Verificar se há mudanças
+        id: verify_diff
+        run: |
+          git diff --quiet voos-milhas-monitor/data/ || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: Commitar dados atualizados
+        if: steps.verify_diff.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add voos-milhas-monitor/data/
+          git commit -m "data: atualizar voos e milhas - $(date -u '+%Y-%m-%d %H:%M UTC')"
+      
+      - name: Push mudanças
+        if: steps.verify_diff.outputs.changed == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+      
+      - name: Log resultado
+        if: steps.verify_diff.outputs.changed != 'true'
+        run: echo "Nenhuma mudança detectada nos dados"

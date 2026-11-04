@@ -108,8 +108,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Caminho dos dados
-DATA_DIR = os.environ.get('CSV_DATA_DIR', './data')
+# Caminho dos dados - tentar múltiplos locais
+def obter_data_dir():
+    """Tenta encontrar o diretório de dados em múltiplos locais"""
+    possiveis_dirs = [
+        os.environ.get('CSV_DATA_DIR', ''),
+        './data',
+        '../data',
+        '../../data',
+        os.path.join(os.path.dirname(__file__), '..', 'data'),
+    ]
+    
+    for dir_path in possiveis_dirs:
+        if dir_path and os.path.isdir(dir_path):
+            return dir_path
+    
+    # Se nenhum existe, criar ./data
+    os.makedirs('./data', exist_ok=True)
+    return './data'
+
+DATA_DIR = obter_data_dir()
 
 @st.cache_data(ttl=300)
 def carregar_dados():
