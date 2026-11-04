@@ -1,0 +1,4 @@
+id,timestamp,tipo,origem,destino,preco,status,motivo
+EXEMPLO_001,2026-11-04T17:00:00Z,voo,GRU,LIS,2890.00,ATIVA,Disponível
+EXEMPLO_002,2026-11-04T17:00:00Z,voo,GRU,FCO,3680.00,ATIVA,Disponível
+EXEMPLO_003,2026-11-04T17:00:00Z,voo,CNF,MAD,3250.00,ATIVA,Disponível
