@@ -1,0 +1,108 @@
+===============================================================================
+🔌 CONEXÃO COM APIs - RESUMO RÁPIDO
+===============================================================================
+
+Para o agente funcionar, você precisa de 2 coisas OBRIGATÓRIAS:
+
+1. Google Sheets API
+2. API de Busca de Voos (Kiwi.com ou Skyscanner)
+
+===============================================================================
+1️⃣ GOOGLE SHEETS API
+===============================================================================
+
+📋 O QUE FAZER:
+
+1. Acessar: https://console.cloud.google.com/
+2. Criar projeto: "voos-milhas-monitor"
+3. Ativar: Google Sheets API
+4. Criar: Service Account
+5. Baixar: credentials.json (salvar na raiz do projeto)
+6. Criar planilha: https://sheets.new
+7. Criar 6 abas: VOOS_ATIVOS, MILHAS_ATIVAS, OPORTUNIDADES_COMBINADAS, 
+                  HISTORICO, CONFIGURACOES, LOG_EXECUCOES
+8. Compartilhar planilha com e-mail da service account (permissão: Editor)
+9. Copiar ID da planilha (da URL)
+
+🔧 CONFIGURAR:
+
+Editar .env:
+GOOGLE_SHEETS_ID=seu-id-aqui
+GOOGLE_APPLICATION_CREDENTIALS=./credentials.json
+
+📦 INSTALAR:
+
+npm install googleapis
+
+✅ TESTAR:
+
+Criar bot/lib/sheets-client.ts (código em SETUP_APIS.md seção 1E)
+
+===============================================================================
+2️⃣ API DE VOOS - Kiwi.com (RECOMENDADO - GRATUITO)
+===============================================================================
+
+📋 O QUE FAZER:
+
+1. Acessar: https://tequila.kiwi.com/portal/login
+2. Criar conta (gratuito)
+3. Ir em: "My Applications" → "Create new application"
+4. Nome: "voos-milhas-monitor"
+5. Copiar API Key
+
+🔧 CONFIGURAR:
+
+Editar .env:
+KIWI_API_KEY=sua-key-aqui
+
+📦 INSTALAR:
+
+npm install axios
+
+✅ IMPLEMENTAR:
+
+Substituir função buscarVoosDisponiveis em bot/tools/buscar-voos.ts
+(código completo em SETUP_APIS.md seção 2A-5)
+
+===============================================================================
+3️⃣ CONECTAR TUDO
+===============================================================================
+
+Atualizar bot/tools/atualizar-planilha.ts para usar SheetsClient
+(código em SETUP_APIS.md)
+
+===============================================================================
+⏱️ TEMPO ESTIMADO
+===============================================================================
+
+Google Sheets: 30 minutos
+Kiwi API: 20 minutos
+Integração: 30 minutos
+----------------------------
+Total: ~1h30
+
+===============================================================================
+💰 CUSTO
+===============================================================================
+
+Google Sheets: R$ 0 (gratuito)
+Kiwi API: R$ 0 (100 requisições/mês grátis)
+----------------------------
+Total: R$ 0/mês para MVP
+
+===============================================================================
+📚 GUIA COMPLETO
+===============================================================================
+
+Veja SETUP_APIS.md para:
+- Passo a passo detalhado
+- Código completo para copiar/colar
+- Testes de conexão
+- Alternativas (Skyscanner, scraping)
+- Troubleshooting
+
+===============================================================================
+
+Para começar: Siga seção 1 (Google Sheets) do SETUP_APIS.md
+
+===============================================================================
