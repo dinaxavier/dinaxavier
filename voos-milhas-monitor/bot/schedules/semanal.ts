@@ -176,12 +176,24 @@ async function obterConfiguracoes(ctx: any) {
   // TODO: Ler da aba CONFIGURACOES da planilha
   // Por enquanto, retorna configurações padrão
   return {
-    // Voos — dois grupos para não cruzar Orlando com a Europa
+    // Grupos separados para não cruzar origens que não combinam com o destino
     grupos_rotas: [
       {
         nome: "Europa",
         origens: (process.env.ORIGENS || "GRU,CGH,VCP").split(",").map((c) => c.trim()),
-        destinos: (process.env.DESTINOS || "CDG,LIS,BCN,FCO,MAD,LON").split(",").map((c) => c.trim()),
+        destinos: (process.env.DESTINOS || "CDG,LIS,BCN,FCO,MXP,MAD,LON,KEF")
+          .split(",")
+          .map((c) => c.trim()),
+      },
+      {
+        nome: "América do Sul",
+        origens: (process.env.ORIGENS_AMERICA_SUL || "GRU,CGH,VCP").split(",").map((c) => c.trim()),
+        destinos: (process.env.DESTINOS_AMERICA_SUL || "MVD,EZE").split(",").map((c) => c.trim()),
+      },
+      {
+        nome: "África do Sul",
+        origens: (process.env.ORIGENS_AFRICA || "CNF").split(",").map((c) => c.trim()),
+        destinos: (process.env.DESTINOS_AFRICA || "JNB,CPT").split(",").map((c) => c.trim()),
       },
       {
         nome: "Canadá",

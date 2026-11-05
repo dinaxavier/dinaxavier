@@ -41,7 +41,17 @@ async function testarKiwiAPI() {
       {
         nome: 'Europa',
         origens: separar(process.env.ORIGENS, 'GRU,CGH,VCP'),
-        destinos: separar(process.env.DESTINOS, 'CDG,LIS,BCN,FCO,MAD,LON'),
+        destinos: separar(process.env.DESTINOS, 'CDG,LIS,BCN,FCO,MXP,MAD,LON,KEF'),
+      },
+      {
+        nome: 'América do Sul',
+        origens: separar(process.env.ORIGENS_AMERICA_SUL, 'GRU,CGH,VCP'),
+        destinos: separar(process.env.DESTINOS_AMERICA_SUL, 'MVD,EZE'),
+      },
+      {
+        nome: 'África do Sul',
+        origens: separar(process.env.ORIGENS_AFRICA, 'CNF'),
+        destinos: separar(process.env.DESTINOS_AFRICA, 'JNB,CPT'),
       },
       {
         nome: 'Canadá',

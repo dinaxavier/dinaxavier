@@ -37,7 +37,11 @@ jobs:
           KIWI_API_KEY: ${{ secrets.KIWI_API_KEY }}
           CSV_DATA_DIR: ./data
           ORIGENS: GRU,CGH,VCP
-          DESTINOS: CDG,LIS,BCN,FCO,MAD,LON
+          DESTINOS: CDG,LIS,BCN,FCO,MXP,MAD,LON,KEF
+          ORIGENS_AMERICA_SUL: GRU,CGH,VCP
+          DESTINOS_AMERICA_SUL: MVD,EZE
+          ORIGENS_AFRICA: CNF
+          DESTINOS_AFRICA: JNB,CPT
           ORIGENS_CANADA: GRU,MCO
           DESTINOS_CANADA: YUL,YQB
         run: node testar-csv.js
