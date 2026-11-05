@@ -38,6 +38,8 @@ jobs:
           CSV_DATA_DIR: ./data
           ORIGENS: GRU,CGH,VCP
           DESTINOS: CDG,LIS,BCN,FCO,MAD,LON
+          ORIGENS_CANADA: GRU,MCO
+          DESTINOS_CANADA: YUL,YQB
         run: node testar-csv.js
       
       - name: Verificar se há mudanças

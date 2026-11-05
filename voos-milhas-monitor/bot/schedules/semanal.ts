@@ -47,20 +47,35 @@ export default defineSchedule({
         // Ler configurações da planilha ou usar padrões
         const config = await obterConfiguracoes(ctx);
 
-        resultados.busca_voos = await ctx.callTool("buscar_voos", {
-          origens: config.origens || ["GRU", "CGH", "VCP"],
-          destinos: config.destinos || ["CDG", "LIS", "BCN", "ROM", "MAD"],
-          data_ida_inicio: config.data_ida_inicio || getDataFutura(30),
-          data_ida_fim: config.data_ida_fim || getDataFutura(180),
-          data_volta_inicio: config.data_volta_inicio || getDataFutura(37),
-          data_volta_fim: config.data_volta_fim || getDataFutura(187),
-          passageiros: config.passageiros || 1,
-          preco_maximo: config.preco_maximo,
-          desconto_minimo: config.desconto_minimo || 15,
-          voo_direto_preferencial: config.voo_direto_preferencial || false,
-          max_conexoes: config.max_conexoes,
-          aceitar_mudanca_aeroporto: config.aceitar_mudanca_aeroporto || false,
-        });
+        const oportunidades: any[] = [];
+        const mensagens: string[] = [];
+
+        for (const grupo of config.grupos_rotas) {
+          console.log(
+            `[${execucaoId}] Buscando ${grupo.nome}: ${grupo.origens.join(",")} → ${grupo.destinos.join(",")}`
+          );
+          const busca: any = await ctx.callTool("buscar_voos", {
+            origens: grupo.origens,
+            destinos: grupo.destinos,
+            data_ida_inicio: config.data_ida_inicio || getDataFutura(30),
+            data_ida_fim: config.data_ida_fim || getDataFutura(180),
+            data_volta_inicio: config.data_volta_inicio || getDataFutura(37),
+            data_volta_fim: config.data_volta_fim || getDataFutura(187),
+            passageiros: config.passageiros || 1,
+            preco_maximo: config.preco_maximo,
+            desconto_minimo: config.desconto_minimo || 15,
+            voo_direto_preferencial: config.voo_direto_preferencial || false,
+            max_conexoes: config.max_conexoes,
+            aceitar_mudanca_aeroporto: config.aceitar_mudanca_aeroporto || false,
+          });
+          oportunidades.push(...(busca?.oportunidades || []));
+          if (busca?.mensagem) mensagens.push(busca.mensagem);
+        }
+
+        resultados.busca_voos = {
+          oportunidades,
+          mensagem: mensagens.join(" | "),
+        };
         console.log(
           `[${execucaoId}] ✓ Busca de voos concluída: ${resultados.busca_voos.mensagem}`
         );
@@ -161,10 +176,19 @@ async function obterConfiguracoes(ctx: any) {
   // TODO: Ler da aba CONFIGURACOES da planilha
   // Por enquanto, retorna configurações padrão
   return {
-    // Voos
-    origens: process.env.ORIGENS?.split(",") || ["GRU", "CGH", "VCP"],
-    destinos:
-      process.env.DESTINOS?.split(",") || ["CDG", "LIS", "BCN", "ROM", "MAD", "LON"],
+    // Voos — dois grupos para não cruzar Orlando com a Europa
+    grupos_rotas: [
+      {
+        nome: "Europa",
+        origens: (process.env.ORIGENS || "GRU,CGH,VCP").split(",").map((c) => c.trim()),
+        destinos: (process.env.DESTINOS || "CDG,LIS,BCN,FCO,MAD,LON").split(",").map((c) => c.trim()),
+      },
+      {
+        nome: "Canadá",
+        origens: (process.env.ORIGENS_CANADA || "GRU,MCO").split(",").map((c) => c.trim()),
+        destinos: (process.env.DESTINOS_CANADA || "YUL,YQB").split(",").map((c) => c.trim()),
+      },
+    ],
     data_ida_inicio: process.env.DATA_IDA_INICIO || getDataFutura(30),
     data_ida_fim: process.env.DATA_IDA_FIM || getDataFutura(180),
     data_volta_inicio: process.env.DATA_VOLTA_INICIO || getDataFutura(37),

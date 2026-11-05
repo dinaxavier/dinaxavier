@@ -24,7 +24,6 @@ async function testarKiwiAPI() {
       return false;
     }
 
-    console.log('\n2. Testando busca de voos (GRU → LIS)...');
     const hoje = new Date();
     const daquiA30Dias = new Date(hoje);
     daquiA30Dias.setDate(hoje.getDate() + 30);
@@ -35,17 +34,40 @@ async function testarKiwiAPI() {
       return data.toISOString().split('T')[0];
     };
 
-    const voos = await client.buscarVoos({
-      origens: ['GRU'],
-      destinos: ['LIS'],
-      dataIdaInicio: formatarData(daquiA30Dias),
-      dataIdaFim: formatarData(daquiA30Dias),
-      dataVoltaInicio: formatarData(daquiA37Dias),
-      dataVoltaFim: formatarData(daquiA37Dias),
-      passageiros: 1,
-      maxConexoes: 2,
-      limite: 5,
-    });
+    const separar = (valor, padrao) =>
+      (valor || padrao).split(',').map((item) => item.trim()).filter(Boolean);
+
+    const grupos = [
+      {
+        nome: 'Europa',
+        origens: separar(process.env.ORIGENS, 'GRU,CGH,VCP'),
+        destinos: separar(process.env.DESTINOS, 'CDG,LIS,BCN,FCO,MAD,LON'),
+      },
+      {
+        nome: 'Canadá',
+        origens: separar(process.env.ORIGENS_CANADA, 'GRU,MCO'),
+        destinos: separar(process.env.DESTINOS_CANADA, 'YUL,YQB'),
+      },
+    ];
+
+    const voos = [];
+    for (const grupo of grupos) {
+      console.log(
+        `\n2. Buscando ${grupo.nome}: ${grupo.origens.join(',')} → ${grupo.destinos.join(',')}`
+      );
+      const encontrados = await client.buscarVoos({
+        origens: grupo.origens,
+        destinos: grupo.destinos,
+        dataIdaInicio: formatarData(daquiA30Dias),
+        dataIdaFim: formatarData(daquiA30Dias),
+        dataVoltaInicio: formatarData(daquiA37Dias),
+        dataVoltaFim: formatarData(daquiA37Dias),
+        passageiros: 1,
+        maxConexoes: 2,
+        limite: 20,
+      });
+      voos.push(...encontrados);
+    }
 
     console.log(`✓ Encontrados ${voos.length} voos`);
 
