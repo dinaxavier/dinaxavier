@@ -46,11 +46,15 @@ class GravarVoosTest(unittest.TestCase):
                             "companhia": "TAP",
                             "data_ida": "2027-02-01",
                             "data_volta": "2027-02-10",
-                            "conexoes": 1,
+                            "conexoes_ida": 1,
+                            "conexoes_volta": 0,
+                            "mudanca_aeroporto": True,
+                            "aeroportos_conexao": "LIS e OPO",
                             "duracao_ida": "14h",
-                            "duracao_volta": "13h",
+                            "duracao_volta": "10h",
                             "link": "https://www.google.com/travel/flights",
                         },
+                        {"origem": "MCO", "destino": "YUL", "preco": 900, "conexoes_ida": 0},
                         {"origem": "CNF", "destino": "JNB", "preco": None},
                     ]
                 },
@@ -62,8 +66,14 @@ class GravarVoosTest(unittest.TestCase):
             self.assertEqual(por_rota[("GRU", "LIS")]["preco_por_pessoa"], "3100.00")
             self.assertEqual(por_rota[("GRU", "LIS")]["desconto_percentual"], "0")
             self.assertEqual(por_rota[("GRU", "LIS")]["tipo_voo_ida"], "1 conexão")
+            self.assertEqual(por_rota[("GRU", "LIS")]["tipo_voo_volta"], "Direto")
+            self.assertEqual(por_rota[("GRU", "LIS")]["conexoes_ida"], "1")
+            self.assertEqual(por_rota[("GRU", "LIS")]["conexoes_volta"], "0")
+            self.assertEqual(por_rota[("GRU", "LIS")]["mudanca_aeroporto"], "Sim")
+            self.assertEqual(por_rota[("GRU", "LIS")]["aeroportos_conexao"], "LIS e OPO")
             self.assertEqual(por_rota[("GRU", "MVD")]["id"], "EXEMPLO_012")
             self.assertNotIn(("CNF", "JNB"), por_rota)
+            self.assertNotIn(("MCO", "YUL"), por_rota)
 
 
 if __name__ == "__main__":

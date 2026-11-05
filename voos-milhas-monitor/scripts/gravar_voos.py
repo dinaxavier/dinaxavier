@@ -34,9 +34,12 @@ COLUNAS = [
     "tipo_voo_ida",
     "tipo_voo_volta",
     "total_conexoes",
+    "conexoes_ida",
+    "conexoes_volta",
     "duracao_total_ida",
     "duracao_total_volta",
     "mudanca_aeroporto",
+    "aeroportos_conexao",
     "classificacao_logistica",
     "score",
     "bagagem_incluida",
@@ -64,18 +67,44 @@ def escrever_csv(caminho: Path, linhas: list[dict]) -> None:
             escritor.writerow({coluna: linha.get(coluna, "") for coluna in COLUNAS})
 
 
-def classificar(conexoes: int) -> tuple[str, str, int]:
+def classificar(conexoes: int) -> tuple[str, int]:
     if conexoes <= 0:
-        return "Direto", "Excelente", 90
+        return "Direto", 90
     if conexoes == 1:
-        return "1 conexão", "Boa", 80
-    return "2+ conexões", "Moderada", 70
+        return "1 conexão", 80
+    return "2+ conexões", 70
 
 
-def linha_de_cotacao(item: dict, cidades: dict, agora: str) -> dict | None:
+def numero(valor, padrao: int | None = None) -> int | None:
+    if valor is None or valor == "":
+        return padrao
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return padrao
+
+
+def texto_mudanca(valor) -> str:
+    if isinstance(valor, bool):
+        return "Sim" if valor else "Não"
+    if valor is None or str(valor).strip() == "":
+        return "não informado"
+    texto = str(valor).strip().lower()
+    if texto in {"sim", "true", "1", "yes"}:
+        return "Sim"
+    if texto in {"nao", "não", "false", "0", "no"}:
+        return "Não"
+    return "não informado"
+
+
+def linha_de_cotacao(
+    item: dict, cidades: dict, agora: str, origens_brasil: set[str]
+) -> dict | None:
     origem = str(item.get("origem") or "").strip().upper()
     destino = str(item.get("destino") or "").strip().upper()
     preco = item.get("preco")
+    if origem not in origens_brasil:
+        return None
     if not origem or not destino or preco in (None, ""):
         return None
     try:
@@ -84,11 +113,24 @@ def linha_de_cotacao(item: dict, cidades: dict, agora: str) -> dict | None:
         return None
     if valor <= 0:
         return None
-    try:
-        conexoes = int(item.get("conexoes") if item.get("conexoes") is not None else 0)
-    except (TypeError, ValueError):
-        conexoes = 0
-    tipo, logistica, score = classificar(conexoes)
+    conexoes_ida = numero(item.get("conexoes_ida"))
+    if conexoes_ida is None:
+        conexoes_ida = numero(item.get("conexoes"), 0)
+    conexoes_volta = numero(item.get("conexoes_volta"))
+    if conexoes_volta is None:
+        conexoes_volta = conexoes_ida
+    tipo_ida, score = classificar(conexoes_ida or 0)
+    tipo_volta, _ = classificar(conexoes_volta or 0)
+    mudanca = texto_mudanca(item.get("mudanca_aeroporto"))
+    if mudanca == "Sim":
+        logistica = "Atenção"
+        score = max(score - 15, 40)
+    elif (conexoes_ida or 0) <= 0 and (conexoes_volta or 0) <= 0:
+        logistica = "Excelente"
+    elif (conexoes_ida or 0) <= 1 and (conexoes_volta or 0) <= 1:
+        logistica = "Boa"
+    else:
+        logistica = "Moderada"
     preco_txt = f"{valor:.2f}"
     return {
         "id": f"ROTA_{origem}_{destino}",
@@ -105,12 +147,15 @@ def linha_de_cotacao(item: dict, cidades: dict, agora: str) -> dict | None:
         "preco_referencia": preco_txt,
         "desconto_percentual": "0",
         "economia_estimada": "0",
-        "tipo_voo_ida": tipo,
-        "tipo_voo_volta": tipo,
-        "total_conexoes": str(conexoes),
+        "tipo_voo_ida": tipo_ida,
+        "tipo_voo_volta": tipo_volta,
+        "total_conexoes": str((conexoes_ida or 0) + (conexoes_volta or 0)),
+        "conexoes_ida": str(conexoes_ida or 0),
+        "conexoes_volta": str(conexoes_volta or 0),
         "duracao_total_ida": item.get("duracao_ida") or "",
         "duracao_total_volta": item.get("duracao_volta") or "",
-        "mudanca_aeroporto": "",
+        "mudanca_aeroporto": mudanca,
+        "aeroportos_conexao": item.get("aeroportos_conexao") or "",
         "classificacao_logistica": logistica,
         "score": str(score),
         "bagagem_incluida": "",
@@ -154,9 +199,10 @@ def estatisticas(linhas: list[dict], agora: str, novas: int) -> dict:
 def gravar(raiz: Path, config: dict, cotacoes: dict, agora: str | None = None) -> dict:
     momento = agora or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     cidades = config.get("cidades", {})
+    origens_brasil = {codigo.strip().upper() for codigo in config.get("origens_brasil", [])}
     novas = []
     for item in cotacoes.get("itens") or []:
-        linha = linha_de_cotacao(item, cidades, momento)
+        linha = linha_de_cotacao(item, cidades, momento, origens_brasil)
         if linha:
             novas.append(linha)
     planilha = raiz / config["planilha"]

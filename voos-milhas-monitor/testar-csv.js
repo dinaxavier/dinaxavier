@@ -55,7 +55,7 @@ async function testarKiwiAPI() {
       },
       {
         nome: 'Canadá',
-        origens: separar(process.env.ORIGENS_CANADA, 'GRU,MCO'),
+        origens: separar(process.env.ORIGENS_CANADA, 'GRU,CGH,VCP,CNF'),
         destinos: separar(process.env.DESTINOS_CANADA, 'YUL,YQB'),
       },
     ];

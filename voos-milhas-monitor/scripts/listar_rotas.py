@@ -30,9 +30,12 @@ def link_google(origem: str, destino: str, janela: dict) -> str:
 def rotas(config: dict) -> list[dict]:
     cidades = config.get("cidades", {})
     janela = config["janela"]
+    brasil = {codigo.strip().upper() for codigo in config.get("origens_brasil", [])}
     saida = []
     for grupo in config["grupos"]:
         for origem in grupo["origens"]:
+            if brasil and origem.upper() not in brasil:
+                continue
             for destino in grupo["destinos"]:
                 saida.append(
                     {

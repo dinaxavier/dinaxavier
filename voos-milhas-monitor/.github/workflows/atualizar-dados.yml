@@ -42,7 +42,7 @@ jobs:
           DESTINOS_AMERICA_SUL: MVD,EZE
           ORIGENS_AFRICA: CNF
           DESTINOS_AFRICA: JNB,CPT
-          ORIGENS_CANADA: GRU,MCO
+          ORIGENS_CANADA: GRU,CGH,VCP,CNF
           DESTINOS_CANADA: YUL,YQB
         run: node testar-csv.js
       

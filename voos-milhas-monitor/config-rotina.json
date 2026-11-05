@@ -37,16 +37,16 @@
     },
     {
       "nome": "Canadá",
-      "origens": ["GRU", "MCO"],
+      "origens": ["GRU", "CGH", "VCP", "CNF"],
       "destinos": ["YUL", "YQB"]
     }
   ],
+  "origens_brasil": ["GRU", "CGH", "VCP", "CNF"],
   "cidades": {
     "GRU": "São Paulo",
     "CGH": "São Paulo",
     "VCP": "Campinas",
     "CNF": "Belo Horizonte",
-    "MCO": "Orlando",
     "CDG": "Paris",
     "LIS": "Lisboa",
     "BCN": "Barcelona",

@@ -147,6 +147,11 @@ def carregar_dados():
             voos_df['desconto_percentual'] = pd.to_numeric(voos_df['desconto_percentual'], errors='coerce')
             voos_df['score'] = pd.to_numeric(voos_df['score'], errors='coerce')
             voos_df['preco_por_pessoa'] = pd.to_numeric(voos_df['preco_por_pessoa'], errors='coerce')
+            for coluna in ('conexoes_ida', 'conexoes_volta', 'mudanca_aeroporto', 'aeroportos_conexao'):
+                if coluna not in voos_df.columns:
+                    voos_df[coluna] = ''
+            origens_brasil = {'GRU', 'CGH', 'VCP', 'CNF'}
+            voos_df = voos_df[voos_df['origem'].isin(origens_brasil)]
         
         # Carregar milhas
         if os.path.exists(milhas_path):
@@ -162,6 +167,31 @@ def carregar_dados():
     except Exception as e:
         st.error(f"Erro ao carregar dados: {e}")
         return pd.DataFrame(), pd.DataFrame(), {}
+
+def rotulo_conexoes(valor) -> str:
+    if valor is None or valor == '' or pd.isna(valor):
+        return 'não informado'
+    quantidade = int(float(valor))
+    if quantidade <= 0:
+        return 'direto'
+    if quantidade == 1:
+        return '1 conexão'
+    return f'{quantidade} conexões'
+
+
+def texto_logistica(voo) -> str:
+    ida = rotulo_conexoes(voo.get('conexoes_ida'))
+    volta = rotulo_conexoes(voo.get('conexoes_volta'))
+    mudanca = voo.get('mudanca_aeroporto')
+    if mudanca is None or mudanca == '' or pd.isna(mudanca):
+        mudanca = 'não informado'
+    aeroportos = voo.get('aeroportos_conexao')
+    if aeroportos is None or aeroportos == '' or pd.isna(aeroportos):
+        aeroportos = ''
+    else:
+        aeroportos = f' ({aeroportos})'
+    return f'{ida} na ida · {volta} na volta · mudança de aeroporto: {mudanca}{aeroportos}'
+
 
 # Carregar dados
 voos_df, milhas_df, stats = carregar_dados()
@@ -253,7 +283,7 @@ with tab1:
                         </div>
                         <p><strong>R$ {voo['preco_por_pessoa']:,.2f}</strong></p>
                         <p style="color: #666; font-size: 0.85rem;">
-                            {voo['tipo_voo_ida']} • {voo['duracao_total_ida']}
+                            {texto_logistica(voo)} • {voo['duracao_total_ida']}
                         </p>
                     </div>
                 </div>
@@ -277,7 +307,7 @@ with tab1:
             destino_filtro = st.selectbox("Destino", destinos)
         
         with col_filtro3:
-            tipos = ['Todos', 'Direto', '1 Conexão', '2+ Conexões']
+            tipos = ['Todos', 'Direto', '1 conexão', '2+ conexões']
             tipo_filtro = st.selectbox("Tipo de Voo", tipos)
         
         with col_filtro4:
@@ -302,14 +332,19 @@ with tab1:
             # Preparar dados para exibição
             display_df = voos_filtrados[[
                 'destino', 'origem', 'data_ida', 'preco_por_pessoa',
-                'desconto_percentual', 'tipo_voo_ida', 'duracao_total_ida',
+                'desconto_percentual', 'conexoes_ida', 'conexoes_volta',
+                'mudanca_aeroporto', 'aeroportos_conexao', 'duracao_total_ida',
                 'classificacao_logistica', 'score'
             ]].copy()
             
             display_df.columns = [
                 'Destino', 'Origem', 'Data Ida', 'Preço',
-                'Desconto %', 'Tipo', 'Duração', 'Logística', 'Score'
+                'Desconto %', 'Conexões ida', 'Conexões volta',
+                'Mudança de aeroporto', 'Aeroportos da conexão', 'Duração',
+                'Logística', 'Score'
             ]
+            display_df['Conexões ida'] = display_df['Conexões ida'].apply(rotulo_conexoes)
+            display_df['Conexões volta'] = display_df['Conexões volta'].apply(rotulo_conexoes)
             
             # Formatar valores
             display_df['Preço'] = display_df['Preço'].apply(lambda x: f"R$ {x:,.2f}")

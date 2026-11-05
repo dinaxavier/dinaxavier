@@ -197,7 +197,7 @@ async function obterConfiguracoes(ctx: any) {
       },
       {
         nome: "Canadá",
-        origens: (process.env.ORIGENS_CANADA || "GRU,MCO").split(",").map((c) => c.trim()),
+        origens: (process.env.ORIGENS_CANADA || "GRU,CGH,VCP,CNF").split(",").map((c) => c.trim()),
         destinos: (process.env.DESTINOS_CANADA || "YUL,YQB").split(",").map((c) => c.trim()),
       },
     ],
