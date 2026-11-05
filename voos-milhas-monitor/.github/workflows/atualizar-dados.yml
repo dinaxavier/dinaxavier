@@ -44,6 +44,8 @@ jobs:
           DESTINOS_AFRICA: JNB,CPT
           ORIGENS_CANADA: GRU,CGH,VCP,CNF
           DESTINOS_CANADA: YUL,YQB
+          ORIGENS_ORLANDO: GRU,CGH,VCP,CNF
+          DESTINOS_ORLANDO: MCO
         run: node testar-csv.js
       
       - name: Verificar se há mudanças

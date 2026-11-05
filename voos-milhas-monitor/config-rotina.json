@@ -39,6 +39,11 @@
       "nome": "Canadá",
       "origens": ["GRU", "CGH", "VCP", "CNF"],
       "destinos": ["YUL", "YQB"]
+    },
+    {
+      "nome": "Orlando",
+      "origens": ["GRU", "CGH", "VCP", "CNF"],
+      "destinos": ["MCO"]
     }
   ],
   "origens_brasil": ["GRU", "CGH", "VCP", "CNF"],
@@ -60,6 +65,7 @@
     "JNB": "Joanesburgo",
     "CPT": "Cidade do Cabo",
     "YUL": "Montreal",
-    "YQB": "Quebec"
+    "YQB": "Quebec",
+    "MCO": "Orlando"
   }
 }

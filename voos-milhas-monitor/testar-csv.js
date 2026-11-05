@@ -58,6 +58,11 @@ async function testarKiwiAPI() {
         origens: separar(process.env.ORIGENS_CANADA, 'GRU,CGH,VCP,CNF'),
         destinos: separar(process.env.DESTINOS_CANADA, 'YUL,YQB'),
       },
+      {
+        nome: 'Orlando',
+        origens: separar(process.env.ORIGENS_ORLANDO, 'GRU,CGH,VCP,CNF'),
+        destinos: separar(process.env.DESTINOS_ORLANDO, 'MCO'),
+      },
     ];
 
     const voos = [];

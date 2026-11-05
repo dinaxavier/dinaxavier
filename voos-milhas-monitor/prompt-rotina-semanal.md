@@ -55,7 +55,10 @@ No editor de Automations:
 | Repositório | dinaxavier/dinaxavier |
 | Cloud Agent | Ativado |
 | Agendamento | Segunda-feira, 07:00, fuso America/Sao_Paulo |
+| Modelo | Composer 2.5, esforço baixo |
 | Prompt | O bloco acima |
+
+Composer 2.5 basta: a tarefa é ler o preço, as conexões e a troca de aeroporto que aparecem na página. Um modelo mais forte gastaria token sem mudar o CSV.
 
 Não há segredo de API. Não há e-mail.
 

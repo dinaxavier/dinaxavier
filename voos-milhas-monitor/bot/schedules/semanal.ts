@@ -200,6 +200,11 @@ async function obterConfiguracoes(ctx: any) {
         origens: (process.env.ORIGENS_CANADA || "GRU,CGH,VCP,CNF").split(",").map((c) => c.trim()),
         destinos: (process.env.DESTINOS_CANADA || "YUL,YQB").split(",").map((c) => c.trim()),
       },
+      {
+        nome: "Orlando",
+        origens: (process.env.ORIGENS_ORLANDO || "GRU,CGH,VCP,CNF").split(",").map((c) => c.trim()),
+        destinos: (process.env.DESTINOS_ORLANDO || "MCO").split(",").map((c) => c.trim()),
+      },
     ],
     data_ida_inicio: process.env.DATA_IDA_INICIO || getDataFutura(30),
     data_ida_fim: process.env.DATA_IDA_FIM || getDataFutura(180),
