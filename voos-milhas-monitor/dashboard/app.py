@@ -1,3 +1,4 @@
+import html
 import json
 import os
 from datetime import datetime
@@ -397,6 +398,12 @@ def passagens(voos):
         desconto = voo.get("desconto_percentual")
         eco = f"{desconto:.0f}%" if pd.notna(desconto) else "—"
         score = f"{voo['score']:.0f}/100" if pd.notna(voo.get("score")) else "—"
+        link = texto(voo.get("link"))
+        seta = (
+            f'<a class="seta" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener">→</a>'
+            if link
+            else "—"
+        )
         linhas.append(
             "<tr>"
             f"<td>{bandeira} {cidade}</td>"
@@ -406,6 +413,7 @@ def passagens(voos):
             f"<td><b>{reais(voo.get('preco_por_pessoa'))}</b></td>"
             f"<td><span class='eco'>{eco}</span></td>"
             f"<td><span class='score'>{score}</span></td>"
+            f"<td>{seta}</td>"
             "</tr>"
         )
     st.markdown(
@@ -413,7 +421,7 @@ def passagens(voos):
         <table class="tabela">
           <thead><tr>
             <th>Destino</th><th>Rota</th><th>Datas</th><th>Itinerário</th>
-            <th>Preço (por pessoa)</th><th>Economia</th><th>Score</th>
+            <th>Preço (por pessoa)</th><th>Economia</th><th>Score</th><th></th>
           </tr></thead>
           <tbody>
         """
