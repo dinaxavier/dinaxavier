@@ -28,6 +28,8 @@ env/
 !package.json
 !tsconfig.json
 !data/*.json
+!config-rotina.json
+!out/*.json
 
 # Google Sheets (legado, não mais usado)
 credentials.json
