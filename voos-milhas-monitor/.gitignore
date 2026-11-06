@@ -29,6 +29,7 @@ env/
 !tsconfig.json
 !data/*.json
 !config-rotina.json
+!config-milhas.json
 !out/*.json
 
 # Google Sheets (legado, não mais usado)

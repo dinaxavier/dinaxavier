@@ -17,6 +17,23 @@
     "estadia_dias_min": 7,
     "estadia_dias_max": 15
   },
+  "matriz": {
+    "passo_ida_dias": 7,
+    "estadias": [7, 10, 14],
+    "max_celulas_por_rodada": 40,
+    "rotacao": true,
+    "estado": "out/matriz_estado.json"
+  },
+  "baseline": {
+    "observacoes": "data/observacoes.csv",
+    "janela_dias": 90,
+    "min_observacoes": 3,
+    "metrica": "mediana"
+  },
+  "alerta": {
+    "desconto_minimo_percentual": 25,
+    "arquivo": "data/alertas.csv"
+  },
   "desconto_minimo_percentual": 25,
   "grupos": [
     {

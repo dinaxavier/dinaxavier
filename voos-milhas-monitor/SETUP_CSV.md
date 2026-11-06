@@ -51,15 +51,18 @@ id,timestamp,origem,destino,cidade_origem,cidade_destino,companhia,data_ida,data
 Promoções de compra de milhas:
 
 ```csv
-id,timestamp,programa,tipo_promocao,descricao,custo_por_milheiro,bonus_percentual,desconto_percentual,score,validade_promocao,link
+id,timestamp,programa,tipo_promocao,descricao,custo_por_milheiro,bonus_percentual,desconto_percentual,score,validade_promocao,link,ativo
 ```
 
 **Campos principais:**
-- `programa`: "Smiles", "Latam Pass", "Livelo", "TudoAzul"
+- `programa`: ver lista em `config-milhas.json` (Smiles, Azul, LATAM Pass, Livelo, Iberia Avios…)
 - `tipo_promocao`: "Compra" | "Transferência" | "Bônus"
-- `custo_por_milheiro`: Custo em centavos por 1.000 milhas
+- `descricao`: texto curto do aviso no topo do dashboard
+- `custo_por_milheiro`: custo em R$ por 1.000 milhas (quando couber)
 - `bonus_percentual`: % de bônus oferecido
 - `desconto_percentual`: % de economia vs. histórico
+- `ativo`: `sim` / `nao` — só `sim` e ainda na validade viram o balão do topo
+- `link`: URL da promoção
 
 ### historico.csv
 

@@ -1,5 +1,33 @@
 # 📋 Changelog - Monitor de Voos e Milhas
 
+## [3.2.0] - 2026-11-06
+
+### Dashboard em página única + milhas automáticas
+
+- Remove milhas, combinadas, histórico e config da navegação — fica só o radar de passagens.
+- Balões de promoção no topo, alimentados automaticamente.
+- `scripts/buscar_promocoes_milhas.py` varre feeds (Passageiro de Primeira / Melhores Destinos) filtrando os programas de `config-milhas.json`.
+- Botão **Atualizar dados** e a 1ª carga (CSV velho) disparam a coleta.
+
+## [3.1.0] - 2026-11-06
+
+### Dashboard: aviso de milhas no topo
+
+- Remove a página "Promoções de Milhas".
+- Promoções ativas em `data/milhas_ativas.csv` aparecem como balão no topo.
+- Lista de programas em `config-milhas.json` (Smiles, Azul, LATAM Pass, Livelo, Esfera, Iberia/BA Avios, TAP, Flying Blue, AAdvantage, United, Copa, Aerolíneas Plus).
+
+## [3.0.0] - 2026-11-06
+
+### Rotina: matriz de datas + baseline + alerta
+
+- `scripts/matriz.py` gera células `rota × ida × estadia` e amostra com rotação (`max_celulas_por_rodada`).
+- `scripts/baseline.py` mantém `data/observacoes.csv` (append-only) e calcula mediana por rota.
+- `scripts/gravar_voos.py` grava observação sempre; só promove alerta (≥ 25% abaixo do baseline, ou média da página no bootstrap).
+- `scripts/listar_rotas.py` lista a amostra da rodada com links datados.
+- `prompt-rotina-semanal.md` e `config-rotina.json` alinhados ao novo fluxo.
+- Novos artefatos: `data/observacoes.csv`, `data/alertas.csv`, `out/matriz_estado.json`.
+
 ## [2.0.0] - 2026-11-04
 
 ### 🎉 MUDANÇAS IMPORTANTES
