@@ -360,15 +360,35 @@ def carregar_dados(data_dir):
     return voos, milhas, stats
 
 
-def nav():
+PAGINAS = [
+    ("passagens", "Passagens"),
+    ("milhas", "Compra de milhas"),
+]
+
+
+def pagina_atual() -> str:
+    valor = st.query_params.get("pagina", "passagens")
+    if isinstance(valor, list):
+        valor = valor[0] if valor else "passagens"
+    if valor in {"inicio", ""}:
+        return "passagens"
+    return valor if valor in {chave for chave, _ in PAGINAS} else "passagens"
+
+
+def nav(ativa: str):
+    itens = []
+    for chave, rotulo in PAGINAS:
+        classe = "ativo" if chave == ativa else ""
+        href = "?" if chave == "passagens" else f"?pagina={chave}"
+        itens.append(f'<a class="{classe}" href="{href}">{rotulo}</a>')
     st.markdown(
-        """
+        f"""
         <div class="nav-fixa">
           <div class="marca">
             <div class="marca-icone">✈</div>
             <div><b>Radar de<br>Voos & Milhas</b></div>
           </div>
-          <a class="ativo" href="?">Passagens</a>
+          {''.join(itens)}
         </div>
         """,
         unsafe_allow_html=True,
@@ -444,86 +464,133 @@ def _classe_css(classificacao: str) -> str:
     return mapa.get(classificacao, "regular")
 
 
-def alertas_milhas(tabela):
-    if tabela is None or tabela.empty:
-        return
+def promocoes_ativas(tabela) -> list:
+    if tabela is None or getattr(tabela, "empty", True):
+        return []
     ativas = [linha for _, linha in tabela.iterrows() if promocao_ativa(linha)]
-    if not ativas:
-        return
     ordem = {"Excelente": 0, "Regular": 1, "Ruim": 2}
     ativas.sort(key=lambda item: ordem.get(texto(item.get("classificacao"), "Regular"), 9))
-    # No máximo 5 avisos para não poluir o topo.
-    ativas = ativas[:5]
-    blocos = []
-    for item in ativas:
-        programa = html.escape(texto(item.get("programa"), "Programa"))
-        tipo = html.escape(texto(item.get("tipo_promocao")))
-        descricao = html.escape(texto(item.get("descricao"), "Promoção ativa de milhas."))
-        classificacao = texto(item.get("classificacao"), "Regular")
-        classe = _classe_css(classificacao)
-        nota = html.escape(texto(item.get("nota_avaliacao")))
-        custo_base = texto(item.get("custo_por_milheiro"))
-        custo_efetivo = texto(item.get("custo_efetivo_milheiro"))
-        bonus_t = texto(item.get("bonus_transferencia_percentual"))
-        validade = texto(item.get("validade_promocao"))[:10]
-        meta = f"Válida até {data_curta(validade)}" if validade else "Promoção em andamento"
-        link = texto(item.get("link"))
-        botao = (
-            f'<a class="ver" href="{html.escape(link)}" target="_blank" rel="noopener">Ver oferta</a>'
-            if link.startswith("http")
-            else ""
+    return ativas
+
+
+def montar_balao_milhas(item) -> str:
+    programa = html.escape(texto(item.get("programa"), "Programa"))
+    tipo = html.escape(texto(item.get("tipo_promocao")))
+    descricao = html.escape(texto(item.get("descricao"), "Promoção ativa de milhas."))
+    classificacao = texto(item.get("classificacao"), "Regular")
+    classe = _classe_css(classificacao)
+    nota = html.escape(texto(item.get("nota_avaliacao")))
+    custo_base = texto(item.get("custo_por_milheiro"))
+    custo_efetivo = texto(item.get("custo_efetivo_milheiro"))
+    bonus_t = texto(item.get("bonus_transferencia_percentual"))
+    validade = texto(item.get("validade_promocao"))[:10]
+    meta = f"Válida até {data_curta(validade)}" if validade else "Promoção em andamento"
+    link = texto(item.get("link"))
+    botao = (
+        f'<a class="ver" href="{html.escape(link)}" target="_blank" rel="noopener">Ver oferta</a>'
+        if link.startswith("http")
+        else ""
+    )
+    titulo = programa if not tipo else f"{programa} · {tipo}"
+    if custo_efetivo:
+        bonus_txt = f" (com {bonus_t}% de bônus de transferência)" if bonus_t else ""
+        milheiro_html = (
+            "<div class='milheiro'>"
+            "<strong>Custo efetivo do milheiro após bônus de transferência: "
+            f"R$ {html.escape(custo_efetivo.replace('.', ','))}</strong>"
+            + (
+                f"Base da promoção: R$ {html.escape(custo_base.replace('.', ','))}{html.escape(bonus_txt)}."
+                if custo_base
+                else ""
+            )
+            + "</div>"
         )
-        titulo = programa if not tipo else f"{programa} · {tipo}"
-        if custo_efetivo:
-            bonus_txt = f" (com {bonus_t}% de bônus de transferência)" if bonus_t else ""
-            milheiro_html = (
-                "<div class='milheiro'>"
-                "<strong>Custo efetivo do milheiro após bônus de transferência: "
-                f"R$ {html.escape(custo_efetivo.replace('.', ','))}</strong>"
-                + (
-                    f"Base da promoção: R$ {html.escape(custo_base.replace('.', ','))}{html.escape(bonus_txt)}."
-                    if custo_base
-                    else ""
-                )
-                + "</div>"
-            )
-        elif custo_base:
-            milheiro_html = (
-                "<div class='milheiro'>"
-                f"<strong>Milheiro da promoção: R$ {html.escape(custo_base.replace('.', ','))}</strong>"
-                "Sem bônus de transferência informado para recalcular o efetivo."
-                "</div>"
-            )
-        else:
-            milheiro_html = (
-                "<div class='milheiro'>"
-                "<strong>Custo efetivo do milheiro após bônus de transferência:</strong>"
-                "Não informado na oferta — depende do bônus vigente na transferência."
-                "</div>"
-            )
-        nota_html = f"<p class='nota'>{nota}</p>" if nota else ""
-        # Sem indentação: o Markdown do Streamlit trata linhas indentadas como código cru.
-        blocos.append(
-            f"<div class='balao-milhas {classe}'>"
-            "<div class='icone'>★</div>"
-            "<div class='corpo'>"
-            "<div class='topo-tags'>"
-            "<span class='rotulo'>Promoção de milhas</span>"
-            f"<span class='selo {classe}'>{html.escape(classificacao)}</span>"
-            "</div>"
-            f"<p class='titulo'>{titulo}</p>"
-            f"<p class='texto'>{descricao}</p>"
-            f"{milheiro_html}"
-            f"{nota_html}"
-            f"<p class='meta'>{html.escape(meta)}</p>"
-            "</div>"
-            f"{botao}"
+    elif custo_base:
+        milheiro_html = (
+            "<div class='milheiro'>"
+            f"<strong>Milheiro da promoção: R$ {html.escape(custo_base.replace('.', ','))}</strong>"
+            "Sem bônus de transferência informado para recalcular o efetivo."
             "</div>"
         )
+    else:
+        milheiro_html = (
+            "<div class='milheiro'>"
+            "<strong>Custo efetivo do milheiro após bônus de transferência:</strong>"
+            "Não informado na oferta — depende do bônus vigente na transferência."
+            "</div>"
+        )
+    nota_html = f"<p class='nota'>{nota}</p>" if nota else ""
+    # Sem indentação: o Markdown do Streamlit trata linhas indentadas como código cru.
+    return (
+        f"<div class='balao-milhas {classe}'>"
+        "<div class='icone'>★</div>"
+        "<div class='corpo'>"
+        "<div class='topo-tags'>"
+        "<span class='rotulo'>Promoção de milhas</span>"
+        f"<span class='selo {classe}'>{html.escape(classificacao)}</span>"
+        "</div>"
+        f"<p class='titulo'>{titulo}</p>"
+        f"<p class='texto'>{descricao}</p>"
+        f"{milheiro_html}"
+        f"{nota_html}"
+        f"<p class='meta'>{html.escape(meta)}</p>"
+        "</div>"
+        f"{botao}"
+        "</div>"
+    )
+
+
+def alertas_milhas(tabela, limite: int = 5):
+    ativas = promocoes_ativas(tabela)
+    if not ativas:
+        return
+    # No topo da página de passagens, só os melhores avisos.
+    blocos = [montar_balao_milhas(item) for item in ativas[:limite]]
     st.markdown(
         "<div class='alertas-milhas'>" + "".join(blocos) + "</div>",
         unsafe_allow_html=True,
     )
+
+
+def pagina_milhas(tabela):
+    st.markdown(
+        '<div class="secao"><h2>Compra de milhas</h2></div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Excelente: milheiro competitivo. Regular: depende de bônus/destino/emissão. "
+        "Ruim: custo elevado na compra isolada — às vezes útil só com transferência bonificada."
+    )
+    ativas = promocoes_ativas(tabela)
+    if not ativas:
+        st.info("Nenhuma promoção de compra de milhas ativa no momento. Toque em Atualizar dados.")
+        return
+
+    programas = ["Todos"] + sorted({texto(item.get("programa")) for item in ativas if texto(item.get("programa"))})
+    classes = ["Todas", "Excelente", "Regular", "Ruim"]
+    c1, c2 = st.columns(2)
+    filtro_prog = c1.selectbox("Programa", programas)
+    filtro_classe = c2.selectbox("Avaliação", classes)
+
+    filtradas = ativas
+    if filtro_prog != "Todos":
+        filtradas = [item for item in filtradas if texto(item.get("programa")) == filtro_prog]
+    if filtro_classe != "Todas":
+        filtradas = [
+            item for item in filtradas if texto(item.get("classificacao"), "Regular") == filtro_classe
+        ]
+
+    if not filtradas:
+        st.info("Nenhuma promoção com esses filtros.")
+        return
+
+    st.markdown(
+        "<div class='alertas-milhas'>"
+        + "".join(montar_balao_milhas(item) for item in filtradas)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+    st.caption(f"{len(filtradas)} oportunidade(s) de compra de milhas.")
 
 
 def desconto_visto(voo):
@@ -681,7 +748,8 @@ def milhas_desatualizadas(data_dir: str) -> bool:
 
 def main():
     css()
-    nav()
+    ativa = pagina_atual()
+    nav(ativa)
     atualizar_dados()
     data_dir = obter_data_dir()
     # Na primeira carga (ou CSV velho), busca promoções automaticamente uma vez por sessão.
@@ -690,6 +758,9 @@ def main():
         atualizar_promocoes_milhas()
         st.cache_data.clear()
     voos, tabela_milhas, _ = carregar_dados(data_dir)
+    if ativa == "milhas":
+        pagina_milhas(tabela_milhas)
+        return
     alertas_milhas(tabela_milhas)
     hero()
     passagens(voos)

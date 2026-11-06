@@ -1,5 +1,12 @@
 # 📋 Changelog - Monitor de Voos e Milhas
 
+## [3.4.0] - 2026-11-06
+
+### Aba Compra de milhas
+
+- Mantém os balões no topo de Passagens.
+- Nova aba **Compra de milhas** com a lista completa, filtros por programa e avaliação.
+
 ## [3.3.0] - 2026-11-06
 
 ### Avaliação de promoções de milhas
