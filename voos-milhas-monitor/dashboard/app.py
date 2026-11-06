@@ -177,22 +177,38 @@ def css():
         .alertas-milhas {display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px;}
         .balao-milhas {
             display: flex; align-items: flex-start; gap: 12px;
-            background: linear-gradient(135deg, #ecfdf5 0%, #eff6ff 100%);
-            border: 1px solid #bbf7d0; border-radius: 14px;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;
             padding: 12px 14px 12px 12px;
         }
+        .balao-milhas.excelente {background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border-color: #bbf7d0;}
+        .balao-milhas.regular {background: linear-gradient(135deg, #fffbeb 0%, #f8fafc 100%); border-color: #fde68a;}
+        .balao-milhas.ruim {background: linear-gradient(135deg, #fef2f2 0%, #f8fafc 100%); border-color: #fecaca;}
         .balao-milhas .icone {
             flex: none; width: 34px; height: 34px; border-radius: 10px;
-            background: #059669; color: white; display: grid; place-items: center;
+            background: #64748b; color: white; display: grid; place-items: center;
             font-size: 16px; font-weight: 700;
         }
+        .balao-milhas.excelente .icone {background: #059669;}
+        .balao-milhas.regular .icone {background: #d97706;}
+        .balao-milhas.ruim .icone {background: #dc2626;}
         .balao-milhas .corpo {flex: 1; min-width: 0;}
-        .balao-milhas .rotulo {
+        .balao-milhas .topo-tags {display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px;}
+        .balao-milhas .rotulo, .balao-milhas .selo {
             display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em;
-            text-transform: uppercase; color: #047857; margin-bottom: 2px;
+            text-transform: uppercase; border-radius: 999px; padding: 2px 8px;
         }
+        .balao-milhas .rotulo {color: #475569; background: #e2e8f0;}
+        .balao-milhas .selo.excelente {color: #047857; background: #d1fae5;}
+        .balao-milhas .selo.regular {color: #b45309; background: #fef3c7;}
+        .balao-milhas .selo.ruim {color: #b91c1c; background: #fee2e2;}
         .balao-milhas .titulo {margin: 0; color: #0f172a; font-size: 14px; font-weight: 700; line-height: 1.3;}
         .balao-milhas .texto {margin: 2px 0 0; color: #334155; font-size: 13px; line-height: 1.35;}
+        .balao-milhas .milheiro {
+            margin: 8px 0 0; padding: 8px 10px; border-radius: 10px;
+            background: rgba(15,23,42,.04); color: #0f172a; font-size: 12px; line-height: 1.35;
+        }
+        .balao-milhas .milheiro strong {display: block; font-size: 13px; margin-bottom: 2px;}
+        .balao-milhas .nota {margin: 6px 0 0; color: #475569; font-size: 12px; line-height: 1.35;}
         .balao-milhas .meta {margin: 4px 0 0; color: #64748b; font-size: 12px;}
         .balao-milhas a.ver {
             flex: none; align-self: center; text-decoration: none; white-space: nowrap;
@@ -423,12 +439,19 @@ def promocao_ativa(linha) -> bool:
         return True
 
 
+def _classe_css(classificacao: str) -> str:
+    mapa = {"Excelente": "excelente", "Regular": "regular", "Ruim": "ruim"}
+    return mapa.get(classificacao, "regular")
+
+
 def alertas_milhas(tabela):
     if tabela is None or tabela.empty:
         return
     ativas = [linha for _, linha in tabela.iterrows() if promocao_ativa(linha)]
     if not ativas:
         return
+    ordem = {"Excelente": 0, "Regular": 1, "Ruim": 2}
+    ativas.sort(key=lambda item: ordem.get(texto(item.get("classificacao"), "Regular"), 9))
     # No máximo 5 avisos para não poluir o topo.
     ativas = ativas[:5]
     blocos = []
@@ -436,6 +459,12 @@ def alertas_milhas(tabela):
         programa = html.escape(texto(item.get("programa"), "Programa"))
         tipo = html.escape(texto(item.get("tipo_promocao")))
         descricao = html.escape(texto(item.get("descricao"), "Promoção ativa de milhas."))
+        classificacao = texto(item.get("classificacao"), "Regular")
+        classe = _classe_css(classificacao)
+        nota = html.escape(texto(item.get("nota_avaliacao")))
+        custo_base = texto(item.get("custo_por_milheiro"))
+        custo_efetivo = texto(item.get("custo_efetivo_milheiro"))
+        bonus_t = texto(item.get("bonus_transferencia_percentual"))
         validade = texto(item.get("validade_promocao"))[:10]
         meta = f"Válida até {data_curta(validade)}" if validade else "Promoção em andamento"
         link = texto(item.get("link"))
@@ -445,14 +474,47 @@ def alertas_milhas(tabela):
             else ""
         )
         titulo = programa if not tipo else f"{programa} · {tipo}"
+        if custo_efetivo:
+            bonus_txt = f" (com {bonus_t}% de bônus de transferência)" if bonus_t else ""
+            milheiro_html = (
+                "<div class='milheiro'>"
+                "<strong>Custo efetivo do milheiro após bônus de transferência: "
+                f"R$ {html.escape(custo_efetivo.replace('.', ','))}</strong>"
+                + (
+                    f"Base da promoção: R$ {html.escape(custo_base.replace('.', ','))}{html.escape(bonus_txt)}."
+                    if custo_base
+                    else ""
+                )
+                + "</div>"
+            )
+        elif custo_base:
+            milheiro_html = (
+                "<div class='milheiro'>"
+                f"<strong>Milheiro da promoção: R$ {html.escape(custo_base.replace('.', ','))}</strong>"
+                "Sem bônus de transferência informado para recalcular o efetivo."
+                "</div>"
+            )
+        else:
+            milheiro_html = (
+                "<div class='milheiro'>"
+                "<strong>Custo efetivo do milheiro após bônus de transferência:</strong>"
+                "Não informado na oferta — depende do bônus vigente na transferência."
+                "</div>"
+            )
+        nota_html = f"<p class='nota'>{nota}</p>" if nota else ""
         # Sem indentação: o Markdown do Streamlit trata linhas indentadas como código cru.
         blocos.append(
-            "<div class='balao-milhas'>"
+            f"<div class='balao-milhas {classe}'>"
             "<div class='icone'>★</div>"
             "<div class='corpo'>"
-            "<div class='rotulo'>Promoção de milhas</div>"
+            "<div class='topo-tags'>"
+            "<span class='rotulo'>Promoção de milhas</span>"
+            f"<span class='selo {classe}'>{html.escape(classificacao)}</span>"
+            "</div>"
             f"<p class='titulo'>{titulo}</p>"
             f"<p class='texto'>{descricao}</p>"
+            f"{milheiro_html}"
+            f"{nota_html}"
             f"<p class='meta'>{html.escape(meta)}</p>"
             "</div>"
             f"{botao}"

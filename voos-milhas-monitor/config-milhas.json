@@ -1,6 +1,19 @@
 {
   "descricao": "Programas monitorados para o aviso de promoção no topo do dashboard. A promoção ativa fica em data/milhas_ativas.csv.",
   "arquivo_promocoes": "data/milhas_ativas.csv",
+  "avaliacao": {
+    "excelente_ate": 18,
+    "regular_ate": 28,
+    "bonus_transferencia_referencia": {
+      "livelo": 100,
+      "esfera": 80
+    },
+    "legendas": {
+      "Excelente": "Custo efetivo do milheiro muito competitivo.",
+      "Regular": "Depende de bônus, programa de destino e emissão específica.",
+      "Ruim": "Custo elevado, sem vantagem comprovada na compra isolada."
+    }
+  },
   "feeds": [
     "https://passageirodeprimeira.com/feed/",
     "https://passageirodeprimeira.com/category/promocoes/feed/",

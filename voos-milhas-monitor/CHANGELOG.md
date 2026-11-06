@@ -1,5 +1,14 @@
 # 📋 Changelog - Monitor de Voos e Milhas
 
+## [3.3.0] - 2026-11-06
+
+### Avaliação de promoções de milhas
+
+- Classifica cada oferta: **Excelente** / **Regular** / **Ruim** (compra isolada).
+- Campo **Custo efetivo do milheiro após bônus de transferência**.
+- Turbo Livelo ~R$ 29,40 → Ruim na compra isolada; efetivo ilustrativo com transferência ref. 100%.
+- Regras em `config-milhas.json` (`avaliacao.excelente_ate` / `regular_ate`).
+
 ## [3.2.0] - 2026-11-06
 
 ### Dashboard em página única + milhas automáticas

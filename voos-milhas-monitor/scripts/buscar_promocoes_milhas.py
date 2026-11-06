@@ -18,6 +18,8 @@ from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
+import avaliar_milhas
+
 MAX_IDADE_DIAS = 14
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -30,6 +32,10 @@ COLUNAS = [
     "descricao",
     "custo_por_milheiro",
     "bonus_percentual",
+    "bonus_transferencia_percentual",
+    "custo_efetivo_milheiro",
+    "classificacao",
+    "nota_avaliacao",
     "desconto_percentual",
     "score",
     "validade_promocao",
@@ -221,6 +227,13 @@ def coletar(config: dict) -> list[dict]:
                 continue
             vistos.add(link)
             bonus = extrair_bonus(f"{titulo} {desc}")
+            avaliacao = avaliar_milhas.avaliar_promocao(
+                programa=prog,
+                titulo=titulo,
+                descricao=desc,
+                config=config,
+                bonus_percentual=bonus,
+            )
             saida.append(
                 {
                     "id": f"MILHAS_{prog['id']}_{abs(hash(link)) % 10_000_000:07d}",
@@ -228,21 +241,30 @@ def coletar(config: dict) -> list[dict]:
                     "programa": prog.get("nome") or prog["id"],
                     "tipo_promocao": tipo_de(titulo),
                     "descricao": titulo if len(titulo) <= 160 else titulo[:157] + "…",
-                    "custo_por_milheiro": "",
+                    "custo_por_milheiro": avaliacao["custo_por_milheiro"],
                     "bonus_percentual": bonus,
+                    "bonus_transferencia_percentual": avaliacao["bonus_transferencia_percentual"],
+                    "custo_efetivo_milheiro": avaliacao["custo_efetivo_milheiro"],
+                    "classificacao": avaliacao["classificacao"],
+                    "nota_avaliacao": avaliacao["nota_avaliacao"],
                     "desconto_percentual": bonus,
-                    "score": "80",
+                    "score": avaliacao["score"],
                     "validade_promocao": validade_de(pub_dt),
                     "link": link,
                     "ativo": "sim",
                 }
             )
-    # prioriza programas prioritários e limita ruído
+    ordem_classe = {"Excelente": 0, "Regular": 1, "Ruim": 2}
     ordem = {p["id"]: int(p.get("prioridade") or 9) for p in programas.values()}
 
     def chave(linha: dict) -> tuple:
         pid = next((i for i, p in programas.items() if p.get("nome") == linha["programa"]), "zzz")
-        return (ordem.get(pid, 9), linha["programa"], linha["descricao"])
+        return (
+            ordem_classe.get(linha.get("classificacao") or "", 9),
+            ordem.get(pid, 9),
+            linha["programa"],
+            linha["descricao"],
+        )
 
     saida.sort(key=chave)
     return saida[:20]
