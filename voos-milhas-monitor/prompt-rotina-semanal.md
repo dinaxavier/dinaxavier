@@ -14,7 +14,7 @@ Leia voos-milhas-monitor/config-rotina.json e voos-milhas-monitor/prompt-rotina-
 3. Toda rota precisa sair de um aeroporto do Brasil (GRU, CGH, VCP ou CNF) para o destino. Descarte itinerário que comece em outro país.
 4. Procure só passagem de ida e volta, com estadia de 7 a 15 dias, dentro da janela de datas do config. Estadia é a diferença em dias entre a data de ida e a data de volta. Descarte só ida e o que ficar fora dessa faixa. Anote o menor preço em BRL por pessoa e a média ou o preço típico que a página mostrar para essa ida e volta. Grave a média em preco_medio. O desconto é (média − preço) / média. Só grave a rota se esse desconto for de pelo menos 25%. Se a página não mostrar a média, omita a rota. Não invente a média. Anote também companhia, datas, duração, link da página de ida e volta, conexões da ida, conexões da volta e se há mudança de aeroporto.
 5. Mudança de aeroporto é quando a conexão chega em um aeroporto e o voo seguinte sai de outro, na mesma cidade ou não. Exemplos: CDG e ORY, LHR e LGW, EWR e JFK. Voo direto não tem mudança. Se a página não mostrar os aeroportos da conexão, grave mudanca_aeroporto como null. Não chute.
-6. Não invente preço, data, companhia, número de conexões nem desconto. Se a página não abrir ou não mostrar preço, omita essa rota.
+6. Não invente preço, data, companhia, número de conexões nem desconto. O preço gravado é o menor valor de ida e volta visível no link. Se a página disser que os preços estão normais ou altos, isso não é desconto. Se a página não abrir ou não mostrar preço, omita essa rota.
 7. Grave o que foi visto em voos-milhas-monitor/out/cotacoes.json, neste formato:
    {
      "gerado_em": "AAAA-MM-DDTHH:MM:SS-03:00",

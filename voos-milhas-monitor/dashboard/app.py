@@ -311,7 +311,9 @@ def carregar_dados(data_dir):
         referencia = voos["preco_referencia"]
         preco = voos["preco_por_pessoa"]
         voos["desconto_percentual"] = (referencia - preco) / referencia.replace(0, pd.NA) * 100
-        voos = voos[voos["desconto_percentual"] >= desconto_minimo()].copy()
+        # Sem média acima do preço, o valor exibido é o do link. Com média, só fica o desconto de pelo menos 25%.
+        tem_media = referencia.notna() & preco.notna() & (referencia > preco)
+        voos = voos[~tem_media | (voos["desconto_percentual"] >= desconto_minimo())].copy()
     milhas_path = os.path.join(data_dir, "milhas_ativas.csv")
     if os.path.exists(milhas_path):
         milhas = pd.read_csv(milhas_path)
@@ -372,12 +374,23 @@ def pills(ativa):
     st.markdown(f'<div class="pills">{"".join(html)}</div>', unsafe_allow_html=True)
 
 
+def desconto_visto(voo):
+    desconto = voo.get("desconto_percentual")
+    referencia = voo.get("preco_referencia")
+    preco = voo.get("preco_por_pessoa")
+    if pd.isna(desconto) or pd.isna(referencia) or pd.isna(preco):
+        return None
+    if float(referencia) <= float(preco) or float(desconto) < desconto_minimo():
+        return None
+    return float(desconto)
+
+
 def cartao(voo):
     cidade, pais, _, foto = lugar(voo.get("destino"))
     if not foto:
         foto = "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=480&q=70"
-    desconto = voo.get("desconto_percentual")
-    badge = f'<span class="badge">{desconto:.0f}%</span>' if pd.notna(desconto) else ""
+    desconto = desconto_visto(voo)
+    badge = f'<span class="badge">{desconto:.0f}%</span>' if desconto is not None else ""
     referencia = voo.get("preco_referencia")
     preco = voo.get("preco_por_pessoa")
     antes = ""
@@ -398,8 +411,7 @@ def cartao(voo):
           <div>
             <h3>{html.escape(cidade)}</h3>
             {pais_html}
-          </div>
-          {badge}
+          </div>{badge}
         </div>
         <div class="rota">{html.escape(texto(voo.get("origem")))} → {html.escape(texto(voo.get("destino")))}</div>
         <div class="datas">{html.escape(periodo(voo.get("data_ida"), voo.get("data_volta")))} · ida e volta</div>
@@ -461,8 +473,8 @@ def passagens(voos):
     linhas = []
     for _, voo in filtrados.sort_values("score", ascending=False).iterrows():
         cidade, _, _, _ = lugar(voo.get("destino"))
-        desconto = voo.get("desconto_percentual")
-        eco = f"{desconto:.0f}%" if pd.notna(desconto) else "—"
+        desconto = desconto_visto(voo)
+        eco = f"{desconto:.0f}%" if desconto is not None else "—"
         score = f"{voo['score']:.0f}/100" if pd.notna(voo.get("score")) else "—"
         link = link_ida_volta(
             texto(voo.get("origem")),
@@ -501,7 +513,7 @@ def passagens(voos):
         unsafe_allow_html=True,
     )
     st.caption(
-        f"{len(filtrados)} passagens de ida e volta, pelo menos {desconto_minimo():.0f}% abaixo da média. "
+        f"{len(filtrados)} passagens de ida e volta. O preço é o menor valor por pessoa que o link mostra agora. "
         "Saída sempre de um aeroporto no Brasil."
     )
 
