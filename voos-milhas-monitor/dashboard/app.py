@@ -429,6 +429,8 @@ def alertas_milhas(tabela):
     ativas = [linha for _, linha in tabela.iterrows() if promocao_ativa(linha)]
     if not ativas:
         return
+    # No máximo 5 avisos para não poluir o topo.
+    ativas = ativas[:5]
     blocos = []
     for item in ativas:
         programa = html.escape(texto(item.get("programa"), "Programa"))
@@ -443,21 +445,23 @@ def alertas_milhas(tabela):
             else ""
         )
         titulo = programa if not tipo else f"{programa} · {tipo}"
+        # Sem indentação: o Markdown do Streamlit trata linhas indentadas como código cru.
         blocos.append(
-            f"""
-            <div class="balao-milhas">
-              <div class="icone">★</div>
-              <div class="corpo">
-                <div class="rotulo">Promoção de milhas</div>
-                <p class="titulo">{titulo}</p>
-                <p class="texto">{descricao}</p>
-                <p class="meta">{html.escape(meta)}</p>
-              </div>
-              {botao}
-            </div>
-            """
+            "<div class='balao-milhas'>"
+            "<div class='icone'>★</div>"
+            "<div class='corpo'>"
+            "<div class='rotulo'>Promoção de milhas</div>"
+            f"<p class='titulo'>{titulo}</p>"
+            f"<p class='texto'>{descricao}</p>"
+            f"<p class='meta'>{html.escape(meta)}</p>"
+            "</div>"
+            f"{botao}"
+            "</div>"
         )
-    st.markdown(f'<div class="alertas-milhas">{"".join(blocos)}</div>', unsafe_allow_html=True)
+    st.markdown(
+        "<div class='alertas-milhas'>" + "".join(blocos) + "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def desconto_visto(voo):
