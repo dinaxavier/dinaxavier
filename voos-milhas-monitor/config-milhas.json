@@ -1,0 +1,110 @@
+{
+  "descricao": "Programas monitorados para o aviso de promoção no topo do dashboard. A promoção ativa fica em data/milhas_ativas.csv.",
+  "arquivo_promocoes": "data/milhas_ativas.csv",
+  "programas": [
+    {
+      "id": "smiles",
+      "nome": "Smiles",
+      "operadora": "GOL",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.smiles.com.br/compre-milhas",
+      "prioridade": 1
+    },
+    {
+      "id": "azul",
+      "nome": "Azul Fidelidade",
+      "operadora": "Azul",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.tudoazul.com/",
+      "prioridade": 1
+    },
+    {
+      "id": "latam_pass",
+      "nome": "LATAM Pass",
+      "operadora": "LATAM",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.latamairlines.com/br/pt/latam-pass",
+      "prioridade": 1
+    },
+    {
+      "id": "livelo",
+      "nome": "Livelo",
+      "operadora": "Livelo",
+      "tipo": "coalizao",
+      "url_promocoes": "https://www.livelo.com.br/comprar-pontos",
+      "prioridade": 1
+    },
+    {
+      "id": "esfera",
+      "nome": "Esfera",
+      "operadora": "Santander",
+      "tipo": "coalizao",
+      "url_promocoes": "https://www.esfera.com.vc/",
+      "prioridade": 2
+    },
+    {
+      "id": "iberia_avios",
+      "nome": "Iberia Avios",
+      "operadora": "Iberia",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.iberia.com/br/iberiaplus/",
+      "prioridade": 1
+    },
+    {
+      "id": "ba_avios",
+      "nome": "British Airways Executive Club",
+      "operadora": "British Airways",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.britishairways.com/travel/execclub",
+      "prioridade": 2
+    },
+    {
+      "id": "tap_milesgo",
+      "nome": "TAP Miles&Go",
+      "operadora": "TAP",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.flytap.com/pt-br/miles-and-go",
+      "prioridade": 1
+    },
+    {
+      "id": "flying_blue",
+      "nome": "Flying Blue",
+      "operadora": "Air France / KLM",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.flyingblue.com/",
+      "prioridade": 2
+    },
+    {
+      "id": "aadvantage",
+      "nome": "AAdvantage",
+      "operadora": "American Airlines",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.aa.com/aadvantage",
+      "prioridade": 2
+    },
+    {
+      "id": "united_mileageplus",
+      "nome": "MileagePlus",
+      "operadora": "United",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.united.com/mileageplus",
+      "prioridade": 3
+    },
+    {
+      "id": "copa_connectmiles",
+      "nome": "ConnectMiles",
+      "operadora": "Copa",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.copaair.com/pt-br/connectmiles",
+      "prioridade": 3
+    },
+    {
+      "id": "aerolineas_plus",
+      "nome": "Aerolíneas Plus",
+      "operadora": "Aerolíneas Argentinas",
+      "tipo": "companhia",
+      "url_promocoes": "https://www.aerolineas.com.ar/",
+      "prioridade": 3
+    }
+  ]
+}

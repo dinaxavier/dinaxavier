@@ -1,5 +1,13 @@
 # 📋 Changelog - Monitor de Voos e Milhas
 
+## [3.1.0] - 2026-11-06
+
+### Dashboard: aviso de milhas no topo
+
+- Remove a página "Promoções de Milhas".
+- Promoções ativas em `data/milhas_ativas.csv` aparecem como balão no topo.
+- Lista de programas em `config-milhas.json` (Smiles, Azul, LATAM Pass, Livelo, Esfera, Iberia/BA Avios, TAP, Flying Blue, AAdvantage, United, Copa, Aerolíneas Plus).
+
 ## [3.0.0] - 2026-11-06
 
 ### Rotina: matriz de datas + baseline + alerta

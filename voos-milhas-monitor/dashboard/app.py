@@ -47,7 +47,6 @@ LUGARES = {
 PAGINAS = [
     ("inicio", "Início"),
     ("passagens", "Passagens Aéreas"),
-    ("milhas", "Promoções de Milhas"),
     ("combinadas", "Oportunidades Combinadas"),
     ("historico", "Histórico e Tendências"),
     ("config", "Configurações"),
@@ -181,6 +180,36 @@ def css():
         .tabela td {padding: 12px; border-top: 1px solid #eef2f7; color: #1e293b; font-size: 14px;}
         .eco {background: #e8f8ef; color: #15803d; border-radius: 999px; padding: 3px 8px; font-weight: 700; font-size: 13px;}
         .score {background: #e8f8ef; color: #166534; border-radius: 999px; padding: 3px 8px; font-weight: 700; font-size: 13px;}
+        .alertas-milhas {display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px;}
+        .balao-milhas {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #eff6ff 100%);
+            border: 1px solid #bbf7d0; border-radius: 14px;
+            padding: 12px 14px 12px 12px;
+        }
+        .balao-milhas .icone {
+            flex: none; width: 34px; height: 34px; border-radius: 10px;
+            background: #059669; color: white; display: grid; place-items: center;
+            font-size: 16px; font-weight: 700;
+        }
+        .balao-milhas .corpo {flex: 1; min-width: 0;}
+        .balao-milhas .rotulo {
+            display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+            text-transform: uppercase; color: #047857; margin-bottom: 2px;
+        }
+        .balao-milhas .titulo {margin: 0; color: #0f172a; font-size: 14px; font-weight: 700; line-height: 1.3;}
+        .balao-milhas .texto {margin: 2px 0 0; color: #334155; font-size: 13px; line-height: 1.35;}
+        .balao-milhas .meta {margin: 4px 0 0; color: #64748b; font-size: 12px;}
+        .balao-milhas a.ver {
+            flex: none; align-self: center; text-decoration: none; white-space: nowrap;
+            background: #0f172a; color: white; border-radius: 8px;
+            padding: 7px 12px; font-size: 12px; font-weight: 650;
+        }
+        .balao-milhas a.ver:hover {background: #1e293b;}
+        @media (max-width: 860px) {
+            .balao-milhas {flex-wrap: wrap;}
+            .balao-milhas a.ver {width: 100%; text-align: center;}
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -369,13 +398,63 @@ def hero():
 
 
 def pills(ativa):
-    mapa = [("passagens", "Passagens Aéreas"), ("milhas", "Promoções de Milhas"), ("combinadas", "Oportunidades Combinadas")]
+    mapa = [("passagens", "Passagens Aéreas"), ("combinadas", "Oportunidades Combinadas")]
     atual = "passagens" if ativa == "inicio" else ativa
     html = []
     for chave, rotulo in mapa:
         classe = "ativo" if chave == atual else ""
         html.append(f'<a class="{classe}" href="?pagina={chave}">{rotulo}</a>')
     st.markdown(f'<div class="pills">{"".join(html)}</div>', unsafe_allow_html=True)
+
+
+def promocao_ativa(linha) -> bool:
+    ativo = texto(linha.get("ativo"), "sim").lower()
+    if ativo in {"nao", "não", "false", "0", "off", "inativo"}:
+        return False
+    validade = texto(linha.get("validade_promocao"))[:10]
+    if not validade:
+        return True
+    try:
+        return datetime.strptime(validade, "%Y-%m-%d").date() >= datetime.now().date()
+    except ValueError:
+        return True
+
+
+def alertas_milhas(tabela):
+    if tabela is None or tabela.empty:
+        return
+    ativas = [linha for _, linha in tabela.iterrows() if promocao_ativa(linha)]
+    if not ativas:
+        return
+    blocos = []
+    for item in ativas:
+        programa = html.escape(texto(item.get("programa"), "Programa"))
+        tipo = html.escape(texto(item.get("tipo_promocao")))
+        descricao = html.escape(texto(item.get("descricao"), "Promoção ativa de milhas."))
+        validade = texto(item.get("validade_promocao"))[:10]
+        meta = f"Válida até {data_curta(validade)}" if validade else "Promoção em andamento"
+        link = texto(item.get("link"))
+        botao = (
+            f'<a class="ver" href="{html.escape(link)}" target="_blank" rel="noopener">Ver oferta</a>'
+            if link.startswith("http")
+            else ""
+        )
+        titulo = programa if not tipo else f"{programa} · {tipo}"
+        blocos.append(
+            f"""
+            <div class="balao-milhas">
+              <div class="icone">★</div>
+              <div class="corpo">
+                <div class="rotulo">Promoção de milhas</div>
+                <p class="titulo">{titulo}</p>
+                <p class="texto">{descricao}</p>
+                <p class="meta">{html.escape(meta)}</p>
+              </div>
+              {botao}
+            </div>
+            """
+        )
+    st.markdown(f'<div class="alertas-milhas">{"".join(blocos)}</div>', unsafe_allow_html=True)
 
 
 def desconto_visto(voo):
@@ -523,23 +602,6 @@ def passagens(voos):
     )
 
 
-def milhas(tabela):
-    st.markdown('<div class="secao"><h2>Promoções de Milhas</h2></div>', unsafe_allow_html=True)
-    if tabela.empty:
-        st.info("Ainda não há promoções de milhas nesta rodada.")
-        return
-    for _, item in tabela.iterrows():
-        st.markdown(
-            f"**{texto(item.get('programa'))}** · {texto(item.get('tipo_promocao'))}  \n"
-            f"{texto(item.get('descricao'))}  \n"
-            f"Custo por milheiro: {reais(item.get('custo_por_milheiro'))} · "
-            f"desconto {texto(item.get('desconto_percentual'), '0')}%"
-        )
-        link = texto(item.get("link"))
-        if link:
-            st.link_button("Ver promoção", link)
-
-
 def combinadas():
     st.markdown('<div class="secao"><h2>Oportunidades Combinadas</h2></div>', unsafe_allow_html=True)
     st.info("A comparação entre comprar milhas e emitir, ou pagar a passagem em dinheiro, entra quando houver preço de milheiro e preço da passagem na mesma rota.")
@@ -554,6 +616,16 @@ def historico(data_dir):
     st.dataframe(pd.read_csv(caminho), use_container_width=True, hide_index=True)
 
 
+def ler_programas_milhas():
+    caminho = os.path.join(os.path.dirname(__file__), "..", "config-milhas.json")
+    if not os.path.exists(caminho):
+        return []
+    try:
+        return json.load(open(caminho, encoding="utf-8")).get("programas") or []
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
 def configuracoes():
     st.markdown('<div class="secao"><h2>Configurações</h2></div>', unsafe_allow_html=True)
     caminho = os.path.join(os.path.dirname(__file__), "..", "config-rotina.json")
@@ -562,16 +634,26 @@ def configuracoes():
         return
     config = json.load(open(caminho, encoding="utf-8"))
     janela = config.get("janela", {})
+    alerta = config.get("alerta") or {}
+    desconto = alerta.get("desconto_minimo_percentual", config.get("desconto_minimo_percentual", 25))
     st.write(
         "A busca não roda sozinha. Em Atualizar dados, a tabela recarrega o arquivo salvo. "
         f"Quando uma busca nova for pedida, entra só ida e volta de {janela.get('estadia_dias_min', 7)} "
         f"a {janela.get('estadia_dias_max', 15)} dias, com o preço pelo menos "
-        f"{config.get('desconto_minimo_percentual', 25):.0f}% abaixo da média vista na página."
+        f"{float(desconto):.0f}% abaixo do baseline."
     )
     for grupo in config.get("grupos", []):
         st.markdown(
             f"**{grupo['nome']}**  \n"
             f"Sai de {', '.join(grupo['origens'])} para {', '.join(grupo['destinos'])}."
+        )
+    programas = ler_programas_milhas()
+    if programas:
+        st.markdown("**Programas no aviso de milhas**")
+        nomes = ", ".join(p.get("nome") or p.get("id") for p in programas)
+        st.write(
+            f"Monitorados: {nomes}. "
+            "Quando houver promoção ativa em `data/milhas_ativas.csv`, o aviso aparece no topo."
         )
 
 
@@ -580,14 +662,13 @@ def main():
     ativa = pagina_atual()
     nav(ativa)
     atualizar_dados()
-    hero()
     data_dir = obter_data_dir()
     voos, tabela_milhas, _ = carregar_dados(data_dir)
+    alertas_milhas(tabela_milhas)
+    hero()
     pills(ativa)
     if ativa in {"inicio", "passagens"}:
         passagens(voos)
-    elif ativa == "milhas":
-        milhas(tabela_milhas)
     elif ativa == "combinadas":
         combinadas()
     elif ativa == "historico":
