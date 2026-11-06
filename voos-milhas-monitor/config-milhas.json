@@ -18,7 +18,23 @@
     "https://passageirodeprimeira.com/feed/",
     "https://passageirodeprimeira.com/category/promocoes/feed/",
     "https://passageirodeprimeira.com/tag/bonus/feed/",
-    "https://www.melhoresdestinos.com.br/feed"
+    "https://www.melhoresdestinos.com.br/feed",
+    "https://www.melhoresdestinos.com.br/milhas/feed"
+  ],
+  "links_oficiais": {
+    "livelo_azul": "https://www.voeazul.com.br/br/pt/ofertas/livelo"
+  },
+  "promocoes_oficiais": [
+    {
+      "id": "azul_livelo_oficial",
+      "programa_id": "azul",
+      "tipo_promocao": "Transferência",
+      "descricao": "Azul Fidelidade oferece até 130% de bônus nas transferências da Livelo (60% cliente / 90% um clube / 100% ambos + até 30% por tempo de Clube)",
+      "bonus_percentual": "130",
+      "link": "https://www.voeazul.com.br/br/pt/ofertas/livelo",
+      "validade_promocao": "2026-11-06",
+      "ativo": true
+    }
   ],
   "programas": [
     {

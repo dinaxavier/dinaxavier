@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Coleta promoções de compra de milhas/pontos nos programas mapeados.
 
-Fontes: feeds RSS de portais de fidelidade (Passageiro de Primeira, Melhores Destinos).
+Fontes: feeds RSS de portais de fidelidade (Passageiro de Primeira, Melhores Destinos),
+mais promoções oficiais configuradas (ex.: página Livelo da Azul).
 Grava oportunidades ativas em data/milhas_ativas.csv para o balão do dashboard.
 """
 
@@ -154,6 +155,11 @@ def eh_compra_milhas(titulo: str, descricao: str) -> bool:
     texto = f"{titulo} {descricao}"
     if RUIDO.search(titulo):
         return False
+    # Passagem tarifada/emissão não é compra/transferência de milhas.
+    if re.search(r"\bpassagens?\b", titulo, re.I) and not re.search(
+        r"b[oô]nus|compra|comprar|milheiro|transfer|clube", titulo, re.I
+    ):
+        return False
     if not FIDELIDADE.search(texto):
         return False
     if not COMPRA.search(texto):
@@ -199,6 +205,88 @@ def validade_de(pub_dt: datetime | None) -> str:
     return (dt.date() + timedelta(days=7)).isoformat()
 
 
+def link_oficial(titulo: str, descricao: str, config: dict, link: str) -> str:
+    """Troca o link do portal pelo da página oficial, quando mapeado.
+
+    Só usa o título: a descrição do RSS costuma citar outras promoções e
+    gerava falso positivo (ex.: matéria de passagem apontando para Livelo).
+    """
+    del descricao  # mantido na assinatura por compatibilidade da chamada
+    mapa = config.get("links_oficiais") or {}
+    oficial = mapa.get("livelo_azul")
+    if not oficial:
+        return link
+    titulo_l = titulo.lower()
+    if (
+        "livelo" in titulo_l
+        and "azul" in titulo_l
+        and re.search(r"transfer|b[oô]nus", titulo_l)
+        and not re.search(r"passagem|passagens|voo|voe para", titulo_l)
+    ):
+        return oficial
+    return link
+
+
+def coletar_oficiais(config: dict, agora: str, vistos: set[str]) -> list[dict]:
+    """Inclui promoções oficiais ativas do config (site da companhia)."""
+    programas = programas_por_id(config)
+    hoje = datetime.now(timezone.utc).date()
+    saida: list[dict] = []
+    for item in config.get("promocoes_oficiais") or []:
+        if item.get("ativo") is False:
+            continue
+        validade = str(item.get("validade_promocao") or "").strip()
+        if validade:
+            try:
+                if datetime.strptime(validade[:10], "%Y-%m-%d").date() < hoje:
+                    continue
+            except ValueError:
+                pass
+        link = str(item.get("link") or "").strip()
+        if not link or link in vistos:
+            continue
+        prog = programas.get(item.get("programa_id") or "")
+        if not prog:
+            continue
+        titulo = str(item.get("descricao") or item.get("titulo") or "").strip()
+        if not titulo:
+            continue
+        bonus = str(item.get("bonus_percentual") or extrair_bonus(titulo) or "")
+        avaliacao = avaliar_milhas.avaliar_promocao(
+            programa=prog,
+            titulo=titulo,
+            descricao=str(item.get("detalhe") or ""),
+            config=config,
+            bonus_percentual=bonus,
+        )
+        vistos.add(link)
+        saida.append(
+            {
+                "id": (
+                    f"MILHAS_{prog['id']}_{item['id']}"
+                    if item.get("id")
+                    else f"MILHAS_{prog['id']}_{abs(hash(link)) % 10_000_000:07d}"
+                ),
+                "timestamp": agora,
+                "programa": prog.get("nome") or prog["id"],
+                "tipo_promocao": item.get("tipo_promocao") or tipo_de(titulo),
+                "descricao": titulo if len(titulo) <= 160 else titulo[:157] + "…",
+                "custo_por_milheiro": avaliacao["custo_por_milheiro"],
+                "bonus_percentual": bonus,
+                "bonus_transferencia_percentual": avaliacao["bonus_transferencia_percentual"],
+                "custo_efetivo_milheiro": avaliacao["custo_efetivo_milheiro"],
+                "classificacao": avaliacao["classificacao"],
+                "nota_avaliacao": avaliacao["nota_avaliacao"],
+                "desconto_percentual": bonus,
+                "score": avaliacao["score"],
+                "validade_promocao": validade or validade_de(None),
+                "link": link,
+                "ativo": "sim",
+            }
+        )
+    return saida
+
+
 def coletar(config: dict) -> list[dict]:
     programas = programas_por_id(config)
     feeds = config.get("feeds") or FEEDS_PADRAO
@@ -207,6 +295,8 @@ def coletar(config: dict) -> list[dict]:
     corte = agora_dt - timedelta(days=MAX_IDADE_DIAS)
     vistos: set[str] = set()
     saida: list[dict] = []
+    # Oficiais primeiro: garantem a página da companhia (ex.: Livelo na Azul).
+    saida.extend(coletar_oficiais(config, agora, vistos))
     for feed in feeds:
         bruto = baixar(feed)
         if not bruto:
@@ -224,6 +314,9 @@ def coletar(config: dict) -> list[dict]:
                 continue
             prog = detectar_programa(f"{titulo} {desc}", programas)
             if not prog:
+                continue
+            link = link_oficial(titulo, desc, config, link)
+            if link in vistos:
                 continue
             vistos.add(link)
             bonus = extrair_bonus(f"{titulo} {desc}")

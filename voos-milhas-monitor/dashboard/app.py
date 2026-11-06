@@ -20,7 +20,7 @@ st.set_page_config(
     page_title="Radar de Voos & Milhas",
     page_icon="✈️",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
@@ -60,41 +60,49 @@ def css():
         }
         [data-testid="stMain"]:focus,
         [data-testid="stMain"]:focus-visible {outline: none !important;}
-        [data-testid="stAppViewContainer"] {background: #f5f7fb; margin-left: 228px;}
+        [data-testid="stAppViewContainer"] {background: #f5f7fb;}
         [data-testid="stAppViewContainer"] .main .block-container {
             padding: 22px 28px 48px 24px;
             max-width: 1180px;
         }
-        .nav-fixa {
-            position: fixed; left: 0; top: 0; bottom: 0; width: 228px;
-            background: #fbfcfe; border-right: 1px solid #e8edf5;
-            padding: 22px 14px; z-index: 100;
+        /* Menu na lateral esquerda (sidebar nativa) */
+        [data-testid="stSidebar"] {
+            background: #fbfcfe !important;
+            border-right: 1px solid #e8edf5;
+            min-width: 248px !important;
         }
-        .marca {display: flex; gap: 10px; align-items: center; margin: 4px 8px 22px;}
-        .marca-icone {
-            width: 36px; height: 36px; border-radius: 10px;
+        [data-testid="stSidebar"] > div:first-child {padding: 18px 14px 24px;}
+        [data-testid="stSidebar"] .marca {
+            display: flex; gap: 10px; align-items: flex-start;
+            margin: 2px 2px 18px; overflow: visible;
+        }
+        [data-testid="stSidebar"] .marca-icone {
+            width: 34px; height: 34px; border-radius: 10px; flex: none;
             background: #2563eb; color: white; display: grid; place-items: center;
-            font-size: 18px;
+            font-size: 15px;
         }
-        .marca b {display: block; color: #1e3a5f; font-size: 14px; line-height: 1.15;}
-        .marca span {color: #64748b; font-size: 12px;}
-        div.element-container:has(.nav-radio-ancora) {display: none; height: 0; margin: 0;}
-        div.element-container:has(.nav-radio-ancora) + div.element-container {
-            margin: 0 0 14px 0;
+        [data-testid="stSidebar"] .marca b {
+            display: block; color: #1e3a5f;
+            font-size: 12.5px; line-height: 1.35; font-weight: 700;
+            white-space: normal; overflow: visible; word-break: normal;
         }
-        div.element-container:has(.nav-radio-ancora) + div.element-container [role="radiogroup"] {
-            display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px;
-            background: transparent; border: 0; padding: 0;
+        [data-testid="stSidebar"] [role="radiogroup"] {
+            display: flex; flex-direction: column; gap: 4px;
+            background: transparent !important; border: 0 !important; padding: 0 !important;
         }
-        div.element-container:has(.nav-radio-ancora) + div.element-container label {
-            background: white; color: #334155; border: 1px solid #e6ebf2;
-            border-radius: 999px; padding: 8px 14px; font-size: 14px;
+        [data-testid="stSidebar"] [role="radiogroup"] label {
+            background: transparent !important; color: #475569 !important;
+            border: 0 !important; border-radius: 10px !important;
+            padding: 10px 12px !important;
+            font-size: 13px !important; line-height: 1.35 !important;
+            white-space: normal !important; overflow: visible !important;
+            word-break: break-word !important;
         }
-        div.element-container:has(.nav-radio-ancora) + div.element-container label:has(input:checked) {
-            background: #1d4ed8; color: white; border-color: #1d4ed8; font-weight: 600;
+        [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+            background: #e8eefc !important; color: #1d4ed8 !important; font-weight: 600 !important;
         }
         .hero {
-            height: 148px; border-radius: 18px; overflow: hidden; position: relative;
+            height: auto; min-height: 128px; border-radius: 18px; overflow: hidden; position: relative;
             background: #0f2744 url("https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1600&q=70") center/cover;
             margin-bottom: 16px;
         }
@@ -102,9 +110,12 @@ def css():
             position: absolute; inset: 0;
             background: linear-gradient(90deg, rgba(8,20,40,.45), rgba(8,20,40,.12) 72%);
         }
-        .hero .texto {position: relative; padding: 36px 32px; color: white;}
-        .hero h1 {margin: 0; font-size: 32px; letter-spacing: -0.4px;}
-        .hero p {margin: 4px 0 0; opacity: .92;}
+        .hero .texto {position: relative; padding: 26px 22px; color: white;}
+        .hero h1 {
+            margin: 0; font-size: 24px; letter-spacing: -0.3px;
+            line-height: 1.25; white-space: normal; overflow: visible;
+        }
+        .hero p {margin: 6px 0 0; opacity: .92; font-size: 14px; line-height: 1.4;}
         .atualizar-ancora {display: none;}
         div.element-container:has(.atualizar-ancora) {display: none; height: 0; margin: 0;}
         div.element-container:has(.atualizar-ancora) + div.element-container {
@@ -116,26 +127,12 @@ def css():
             width: auto !important; min-height: 36px; padding: 6px 14px;
         }
         @media (max-width: 860px) {
-            [data-testid="stAppViewContainer"] {margin-left: 0;}
-            [data-testid="stAppViewContainer"] .main .block-container {padding: 68px 14px 36px;}
-            .nav-fixa {
-                left: 0; right: 0; top: 0; bottom: auto; width: auto; height: auto;
-                display: flex; gap: 4px; overflow-x: auto; padding: 8px 10px;
-                border-right: 0; border-bottom: 1px solid #e8edf5;
-            }
-            .marca {display: none;}
-            .nav-lateral {display: none !important;}
-            div.element-container:has(.nav-radio-ancora) + div.element-container [role="radiogroup"] {
-                flex-wrap: nowrap; overflow-x: auto;
-            }
-            div.element-container:has(.nav-radio-ancora) + div.element-container label {
-                white-space: nowrap; flex: none;
-            }
+            [data-testid="stAppViewContainer"] .main .block-container {padding: 16px 14px 36px;}
             .pills {overflow-x: auto; padding-bottom: 2px;}
             .secao {flex-direction: column; align-items: flex-start; gap: 4px;}
-            .hero {height: auto; min-height: 148px;}
-            .hero h1 {font-size: 26px;}
-            .hero .texto {padding: 24px 18px 22px;}
+            .hero .texto {padding: 20px 16px;}
+            .hero h1 {font-size: 20px;}
+            .hero p {font-size: 13px;}
             [data-testid="stHorizontalBlock"] {flex-wrap: wrap;}
             [data-testid="column"] {width: 100% !important; flex: 1 1 100% !important;}
         }
@@ -393,29 +390,26 @@ def pagina_atual() -> str:
 
 
 def nav(ativa: str) -> str:
-    st.markdown(
-        """
-        <div class="nav-lateral nav-fixa">
-          <div class="marca">
-            <div class="marca-icone">✈</div>
-            <div><b>Radar de<br>Voos & Milhas</b></div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    # Abas internas (radio): troca a tela sem abrir outro link/URL.
-    st.markdown('<div class="nav-radio-ancora"></div>', unsafe_allow_html=True)
-    rotulos = [rotulo for _, rotulo in PAGINAS]
-    indice = next((i for i, (chave, _) in enumerate(PAGINAS) if chave == ativa), 0)
-    escolha = st.radio(
-        "Navegação",
-        rotulos,
-        index=indice,
-        horizontal=True,
-        label_visibility="collapsed",
-        key="nav_pagina_radio",
-    )
+    """Menu na lateral esquerda, sem abrir outro link a cada clique."""
+    with st.sidebar:
+        st.markdown(
+            """
+            <div class="marca">
+              <div class="marca-icone">✈</div>
+              <div><b>Radar de<br>Voos &amp; Milhas</b></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        rotulos = [rotulo for _, rotulo in PAGINAS]
+        indice = next((i for i, (chave, _) in enumerate(PAGINAS) if chave == ativa), 0)
+        escolha = st.radio(
+            "Navegação",
+            rotulos,
+            index=indice,
+            label_visibility="collapsed",
+            key="nav_pagina_radio",
+        )
     chave = PAGINA_CHAVES.get(escolha, "passagens")
     if chave != st.session_state.get("pagina"):
         st.session_state.pagina = chave
