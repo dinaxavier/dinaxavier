@@ -187,30 +187,26 @@ Isso irá:
 - Salvar em CSV
 - Verificar arquivos gerados
 
-## 🔄 Fluxo de Execução Semanal
+## 🔄 Fluxo da Rotina (matriz + baseline + alerta)
 
 ```
-Segunda-feira 09:00 UTC (06:00 BRT)
+Pedido manual de atualização
 │
-├─ 1. Revalidar oportunidades existentes
-│   └─ Classificar: ATIVA | ATUALIZADA | EXPIRADA | INCONCLUSIVA
+├─ 1. listar_rotas.py
+│   └─ Amostra células da matriz (rota × ida × estadia) com link datado
 │
-├─ 2. Buscar novas passagens
-│   └─ Analisar logística + calcular economia
+├─ 2. Cotar cada célula no Google Flights
+│   └─ Gravar out/cotacoes.json (preço real; média da página opcional)
 │
-├─ 3. Buscar promoções de milhas
-│   └─ Calcular custo por milheiro
+├─ 3. gravar_voos.py
+│   ├─ Append em data/observacoes.csv
+│   ├─ Baseline = mediana da rota (90 dias; bootstrap com média da página)
+│   └─ Alerta (≥ 25% abaixo) → voos_ativos.csv + alertas.csv
 │
-├─ 4. Salvar em arquivos CSV
-│   ├─ voos_ativos.csv
-│   ├─ milhas_ativas.csv
-│   ├─ historico.csv (append)
-│   ├─ logs.csv (append)
-│   └─ estatisticas.json
-│
-└─ 5. Dashboard Streamlit atualiza automaticamente
-    └─ Lê os arquivos CSV e exibe visualizações
+└─ 4. Dashboard Streamlit lê os CSVs
 ```
+
+Detalhes: `prompt-rotina-semanal.md` e `config-rotina.json` (`matriz`, `baseline`, `alerta`).
 
 ## 📝 Exemplo de Uso no Playground
 

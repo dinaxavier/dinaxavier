@@ -1,12 +1,14 @@
 # 📁 Diretório de Dados
 
-Este diretório contém os arquivos CSV gerados automaticamente pelo agente.
+Este diretório contém os arquivos CSV gerados pela rotina (matriz + baseline + alerta).
 
 ## 📋 Arquivos
 
-- **voos_ativos.csv** - Oportunidades atuais de passagens aéreas
+- **observacoes.csv** - Histórico append-only de preços por célula (rota × datas)
+- **voos_ativos.csv** - Alertas ativos (células ≥ desconto mínimo vs baseline)
+- **alertas.csv** - Espelho enxuto dos alertas ativos
 - **milhas_ativas.csv** - Promoções de compra de milhas
-- **historico.csv** - Histórico completo (append-only)
+- **historico.csv** - Histórico legado
 - **logs.csv** - Logs de execução do agente
 - **estatisticas.json** - Resumo da última rodada
 

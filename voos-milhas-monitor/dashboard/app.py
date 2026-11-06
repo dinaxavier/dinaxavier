@@ -284,7 +284,11 @@ def limites_estadia():
 
 
 def desconto_minimo():
-    return float(ler_config().get("desconto_minimo_percentual", 25))
+    config = ler_config()
+    alerta = config.get("alerta") or {}
+    if "desconto_minimo_percentual" in alerta:
+        return float(alerta["desconto_minimo_percentual"])
+    return float(config.get("desconto_minimo_percentual", 25))
 
 
 @st.cache_data(ttl=300)

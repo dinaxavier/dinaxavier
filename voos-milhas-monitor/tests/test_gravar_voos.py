@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""A rotina só grava ida e volta pelo menos 25% abaixo da média vista."""
+"""Matriz amostra células; baseline + alerta grava só desconto ≥ mínimo."""
 
 import base64
+import csv
 import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -13,35 +15,120 @@ import sys
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "scripts"))
 
+import baseline  # noqa: E402
 import gravar_voos  # noqa: E402
 import links  # noqa: E402
+import matriz  # noqa: E402
+
+
+def _tfs_de(url: str) -> bytes:
+    tfs = parse_qs(urlparse(url).query)["tfs"][0]
+    return base64.urlsafe_b64decode(tfs + "=" * ((4 - len(tfs) % 4) % 4))
+
+
+class MatrizTest(unittest.TestCase):
+    def test_gera_celulas_com_passo_e_estadias(self):
+        config = {
+            "janela": {
+                "ida_inicio": "2027-01-01",
+                "ida_fim": "2027-01-15",
+                "estadia_dias_min": 7,
+                "estadia_dias_max": 15,
+            },
+            "matriz": {"passo_ida_dias": 7, "estadias": [7, 14]},
+            "grupos": [{"nome": "T", "origens": ["GRU"], "destinos": ["LIS"]}],
+            "origens_brasil": ["GRU"],
+            "cidades": {"GRU": "São Paulo", "LIS": "Lisboa"},
+        }
+        celulas = matriz.gerar_celulas(config)
+        # idas: 01, 08, 15 → 3; estadias 2 → 6 células
+        self.assertEqual(len(celulas), 6)
+        self.assertEqual(celulas[0]["data_ida"], "2027-01-01")
+        self.assertEqual(celulas[0]["data_volta"], "2027-01-08")
+        self.assertEqual(celulas[1]["data_volta"], "2027-01-15")
+        self.assertIn("tfs=", celulas[0]["link"])
+
+    def test_rotacao_avanca_offset(self):
+        celulas = [{"id": i} for i in range(10)]
+        config = {"matriz": {"max_celulas_por_rodada": 3, "rotacao": True}}
+        amostra1, estado1 = matriz.amostrar_celulas(celulas, config, {"offset": 0}, avancar=True)
+        self.assertEqual([c["id"] for c in amostra1], [0, 1, 2])
+        self.assertEqual(estado1["offset"], 3)
+        amostra2, estado2 = matriz.amostrar_celulas(celulas, config, estado1, avancar=True)
+        self.assertEqual([c["id"] for c in amostra2], [3, 4, 5])
+        self.assertEqual(estado2["offset"], 6)
+
+
+class BaselineTest(unittest.TestCase):
+    def test_mediana_com_minimo_de_observacoes(self):
+        obs = [
+            {
+                "observado_em": "2026-10-01T12:00:00+00:00",
+                "origem": "GRU",
+                "destino": "LIS",
+                "preco": "5000",
+            },
+            {
+                "observado_em": "2026-10-10T12:00:00+00:00",
+                "origem": "GRU",
+                "destino": "LIS",
+                "preco": "4000",
+            },
+            {
+                "observado_em": "2026-10-20T12:00:00+00:00",
+                "origem": "GRU",
+                "destino": "LIS",
+                "preco": "4500",
+            },
+        ]
+        config = {"baseline": {"janela_dias": 90, "min_observacoes": 3, "metrica": "mediana"}}
+        agora = datetime.fromisoformat("2026-11-01T00:00:00+00:00")
+        base = baseline.calcular_baseline(obs, "GRU", "LIS", config, agora=agora)
+        self.assertTrue(base["suficiente"])
+        self.assertEqual(base["valor"], 4500.0)
+
+    def test_bootstrap_pagina_quando_frio(self):
+        config = {"baseline": {"janela_dias": 90, "min_observacoes": 3}}
+        ref = baseline.referencia_alerta([], "GRU", "LIS", config, preco_pagina=4800)
+        self.assertEqual(ref["fonte"], "pagina")
+        self.assertEqual(ref["valor"], 4800.0)
 
 
 class GravarVoosTest(unittest.TestCase):
-    def test_substitui_so_a_rota_cotada(self):
+    def test_alerta_usa_baseline_e_grava_observacao(self):
         with tempfile.TemporaryDirectory() as pasta:
             raiz = Path(pasta)
             (raiz / "data").mkdir()
             (raiz / "data" / "voos_ativos.csv").write_text(
                 "id,timestamp,origem,destino,cidade_origem,cidade_destino,companhia,"
                 "data_ida,data_volta,preco_por_pessoa,preco_total,preco_referencia,"
-                "desconto_percentual,economia_estimada,tipo_voo_ida,tipo_voo_volta,"
-                "total_conexoes,duracao_total_ida,duracao_total_volta,mudanca_aeroporto,"
-                "classificacao_logistica,score,bagagem_incluida,link\n"
-                "EXEMPLO_001,2026-11-04T17:00:00Z,GRU,LIS,São Paulo,Lisboa,TAP,"
-                "2027-01-15,2027-01-25,2890.00,2890.00,4990.00,-42.1,2100.00,Direto,Direto,"
-                "0,10h35,10h20,Não,Excelente,95,1 mala 23kg,https://exemplo\n"
-                "EXEMPLO_012,2026-11-05T23:18:00Z,GRU,MVD,São Paulo,Montevidéu,Gol,"
-                "2027-01-22,2027-01-26,890.00,890.00,1280.00,-30.5,390.00,Direto,Direto,"
-                "0,2h40,2h35,Não,Excelente,89,1 mala 23kg,https://exemplo\n"
-                "EXEMPLO_EZE,2026-11-05T23:18:00Z,GRU,EZE,São Paulo,Buenos Aires,AR,"
-                "2027-02-14,2027-02-21,1400.00,1400.00,1600.00,12.5,200.00,Direto,Direto,"
-                "0,2h35,2h30,Não,Excelente,90,1 mala 23kg,https://exemplo\n"
-                "EXEMPLO_YUL,2026-11-05T23:00:00Z,GRU,YUL,São Paulo,Montreal,Air Canada,"
-                "2027-01-18,2027-01-28,3000.00,3000.00,5000.00,-40.0,2000.00,1 conexão,1 conexão,"
-                "2,14h40,13h55,Não,Boa,86,1 mala 23kg,https://exemplo\n",
+                "fonte_referencia,desconto_percentual,economia_estimada,tipo_voo_ida,tipo_voo_volta,"
+                "total_conexoes,conexoes_ida,conexoes_volta,duracao_total_ida,duracao_total_volta,"
+                "mudanca_aeroporto,aeroportos_conexao,classificacao_logistica,score,bagagem_incluida,link\n"
+                "ALERTA_GRU_YUL_2027-01-18_2027-01-28,2026-11-05T23:00:00Z,GRU,YUL,São Paulo,Montreal,Air Canada,"
+                "2027-01-18,2027-01-28,3000.00,3000.00,5000.00,pagina,40.0,2000.00,1 conexão,1 conexão,"
+                "2,1,1,14h40,13h55,Não,,Boa,86,,https://exemplo\n",
                 encoding="utf-8",
             )
+            # Histórico suficiente para GRU-LIS (baseline 5000)
+            with (raiz / "data" / "observacoes.csv").open("w", encoding="utf-8", newline="") as arq:
+                escritor = csv.DictWriter(arq, fieldnames=baseline.COLUNAS_OBS, lineterminator="\n")
+                escritor.writeheader()
+                for i, preco in enumerate((4800, 5000, 5200)):
+                    escritor.writerow(
+                        {
+                            "observado_em": f"2026-10-{10+i:02d}T12:00:00+00:00",
+                            "origem": "GRU",
+                            "destino": "LIS",
+                            "data_ida": "2027-01-01",
+                            "data_volta": "2027-01-10",
+                            "preco": f"{preco:.2f}",
+                            "companhia": "TAP",
+                            "fonte": "Google Flights",
+                            "id_celula": f"GRU_LIS_2027-01-01_2027-01-10",
+                        }
+                    )
+
             config = json.loads((RAIZ / "config-rotina.json").read_text(encoding="utf-8"))
             resultado = gravar_voos.gravar(
                 raiz,
@@ -52,7 +139,7 @@ class GravarVoosTest(unittest.TestCase):
                             "origem": "gru",
                             "destino": "lis",
                             "preco": 3100,
-                            "preco_medio": 5000,
+                            "preco_medio": 9000,
                             "companhia": "TAP",
                             "data_ida": "2027-02-01",
                             "data_volta": "2027-02-10",
@@ -102,41 +189,35 @@ class GravarVoosTest(unittest.TestCase):
                 agora="2026-11-10T10:00:00+00:00",
             )
             linhas = gravar_voos.ler_csv(raiz / "data" / "voos_ativos.csv")
-            por_rota = {(linha["origem"], linha["destino"]): linha for linha in linhas}
-            self.assertEqual(resultado["cotadas"], 2)
-            self.assertEqual(por_rota[("GRU", "LIS")]["preco_por_pessoa"], "3100.00")
-            self.assertEqual(por_rota[("GRU", "LIS")]["preco_referencia"], "5000.00")
-            self.assertEqual(por_rota[("GRU", "LIS")]["desconto_percentual"], "38.0")
-            self.assertEqual(por_rota[("GRU", "LIS")]["economia_estimada"], "1900.00")
-            self.assertEqual(por_rota[("GRU", "MAD")]["desconto_percentual"], "30.0")
-            self.assertEqual(por_rota[("GRU", "YUL")]["desconto_percentual"], "-40.0")
-            self.assertEqual(por_rota[("GRU", "LIS")]["tipo_voo_ida"], "1 conexão")
-            self.assertEqual(por_rota[("GRU", "LIS")]["tipo_voo_volta"], "Direto")
-            self.assertEqual(por_rota[("GRU", "LIS")]["conexoes_ida"], "1")
-            self.assertEqual(por_rota[("GRU", "LIS")]["conexoes_volta"], "0")
-            self.assertEqual(por_rota[("GRU", "LIS")]["mudanca_aeroporto"], "Sim")
-            self.assertEqual(por_rota[("GRU", "LIS")]["aeroportos_conexao"], "LIS e OPO")
+            por_id = {linha["id"]: linha for linha in linhas}
+            obs = baseline.ler_observacoes(raiz / "data" / "observacoes.csv")
+
+            self.assertEqual(resultado["cotadas"], 2)  # LIS (baseline) + MAD (página)
+            self.assertEqual(resultado["observacoes"], 4)  # LIS, MAD, FCO, BCN (CDG estadia 20)
+            self.assertIn("ALERTA_GRU_LIS_2027-02-01_2027-02-10", por_id)
+            lis = por_id["ALERTA_GRU_LIS_2027-02-01_2027-02-10"]
+            self.assertEqual(lis["preco_por_pessoa"], "3100.00")
+            self.assertEqual(lis["preco_referencia"], "5000.00")  # mediana, não 9000 da página
+            self.assertEqual(lis["fonte_referencia"], "baseline")
+            self.assertEqual(lis["desconto_percentual"], "38.0")
+            self.assertEqual(lis["mudanca_aeroporto"], "Sim")
             self.assertEqual(
-                por_rota[("GRU", "LIS")]["link"],
+                lis["link"],
                 links.link_ida_volta("GRU", "LIS", "2027-02-01", "2027-02-10"),
             )
-            bruto = _tfs_de(por_rota[("GRU", "LIS")]["link"])
-            self.assertIn(b"GRU", bruto)
-            self.assertIn(b"LIS", bruto)
+            bruto = _tfs_de(lis["link"])
             self.assertIn(b"2027-02-01", bruto)
             self.assertIn(b"2027-02-10", bruto)
-            self.assertNotIn(("GRU", "MVD"), por_rota)
-            self.assertNotIn(("GRU", "EZE"), por_rota)
-            self.assertNotIn(("GRU", "CDG"), por_rota)
-            self.assertNotIn(("GRU", "FCO"), por_rota)
-            self.assertNotIn(("GRU", "BCN"), por_rota)
-            self.assertNotIn(("CNF", "JNB"), por_rota)
-            self.assertNotIn(("MCO", "YUL"), por_rota)
 
+            mad = por_id["ALERTA_GRU_MAD_2027-02-02_2027-02-12"]
+            self.assertEqual(mad["fonte_referencia"], "pagina")
+            self.assertEqual(mad["desconto_percentual"], "30.0")
 
-def _tfs_de(url: str) -> bytes:
-    tfs = parse_qs(urlparse(url).query)["tfs"][0]
-    return base64.urlsafe_b64decode(tfs + "=" * ((4 - len(tfs) % 4) % 4))
+            self.assertIn("ALERTA_GRU_YUL_2027-01-18_2027-01-28", por_id)
+            self.assertNotIn("ALERTA_GRU_FCO_2027-02-02_2027-02-12", por_id)
+            self.assertNotIn("ALERTA_GRU_BCN_2027-02-02_2027-02-12", por_id)
+            self.assertNotIn("ALERTA_GRU_CDG_2027-03-01_2027-03-21", por_id)
+            self.assertGreaterEqual(len(obs), 7)  # 3 seed + novas
 
 
 class LinksTest(unittest.TestCase):
