@@ -92,6 +92,16 @@ def css():
         .hero .texto {position: relative; padding: 36px 32px; color: white;}
         .hero h1 {margin: 0; font-size: 32px; letter-spacing: -0.4px;}
         .hero p {margin: 4px 0 0; opacity: .92;}
+        .atualizar-ancora {display: none;}
+        div.element-container:has(.atualizar-ancora) {display: none; height: 0; margin: 0;}
+        div.element-container:has(.atualizar-ancora) + div.element-container {
+            display: flex; justify-content: flex-end; align-self: stretch;
+            width: 100% !important; margin-bottom: 12px;
+        }
+        div.element-container:has(.atualizar-ancora) + div.element-container .stButton {width: auto;}
+        div.element-container:has(.atualizar-ancora) + div.element-container button {
+            width: auto !important; min-height: 36px; padding: 6px 14px;
+        }
         .metricas {
             display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 12px; margin-bottom: 16px;
@@ -323,6 +333,13 @@ def nav(ativa):
     )
 
 
+def atualizar_dados():
+    st.markdown('<div class="atualizar-ancora"></div>', unsafe_allow_html=True)
+    if st.button("Atualizar dados"):
+        st.cache_data.clear()
+        st.rerun()
+
+
 def hero():
     st.markdown(
         """
@@ -432,11 +449,7 @@ def passagens(voos):
     for coluna, (_, voo) in zip(colunas, destaques.iterrows()):
         coluna.markdown(cartao(voo), unsafe_allow_html=True)
 
-    titulo, acao = st.columns([4, 1])
-    titulo.markdown('<div id="todas" class="secao"><h2>Outras oportunidades</h2></div>', unsafe_allow_html=True)
-    if acao.button("Atualizar dados"):
-        st.cache_data.clear()
-        st.rerun()
+    st.markdown('<div id="todas" class="secao"><h2>Outras oportunidades</h2></div>', unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     origens = ["Todos"] + sorted(voos["origem"].dropna().unique().tolist())
     destinos = ["Todos"] + sorted(voos["destino"].dropna().unique().tolist())
@@ -559,6 +572,7 @@ def main():
     css()
     ativa = pagina_atual()
     nav(ativa)
+    atualizar_dados()
     hero()
     data_dir = obter_data_dir()
     voos, tabela_milhas, stats = carregar_dados(data_dir)
