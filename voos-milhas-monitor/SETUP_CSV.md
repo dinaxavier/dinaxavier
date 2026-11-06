@@ -51,16 +51,18 @@ id,timestamp,origem,destino,cidade_origem,cidade_destino,companhia,data_ida,data
 Promoções de compra de milhas:
 
 ```csv
-id,timestamp,programa,tipo_promocao,descricao,custo_por_milheiro,bonus_percentual,desconto_percentual,score,validade_promocao,link,ativo
+id,timestamp,programa,tipo_promocao,descricao,custo_por_milheiro,bonus_percentual,bonus_transferencia_percentual,custo_efetivo_milheiro,classificacao,nota_avaliacao,desconto_percentual,score,validade_promocao,link,ativo
 ```
 
 **Campos principais:**
 - `programa`: ver lista em `config-milhas.json` (Smiles, Azul, LATAM Pass, Livelo, Iberia Avios…)
 - `tipo_promocao`: "Compra" | "Transferência" | "Bônus"
 - `descricao`: texto curto do aviso no topo do dashboard
-- `custo_por_milheiro`: custo em R$ por 1.000 milhas (quando couber)
-- `bonus_percentual`: % de bônus oferecido
-- `desconto_percentual`: % de economia vs. histórico
+- `custo_por_milheiro`: milheiro da promoção (compra isolada), quando couber
+- `custo_efetivo_milheiro`: milheiro após bônus de transferência (`base / (1 + bônus/100)`)
+- `classificacao`: `Excelente` | `Regular` | `Ruim` (avaliação da compra isolada)
+- `nota_avaliacao`: resumo da análise (ex.: ruim isolado, útil com transferência)
+- `bonus_percentual` / `bonus_transferencia_percentual`: % de bônus
 - `ativo`: `sim` / `nao` — só `sim` e ainda na validade viram o balão do topo
 - `link`: URL da promoção
 
