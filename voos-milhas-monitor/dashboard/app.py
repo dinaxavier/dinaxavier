@@ -1,7 +1,11 @@
 import html
 import json
 import os
+import sys
 from datetime import datetime
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts")))
+from links import link_ida_volta
 
 import pandas as pd
 import streamlit as st
@@ -362,7 +366,12 @@ def cartao(voo):
     antes = ""
     if pd.notna(referencia) and pd.notna(preco) and abs(float(referencia) - float(preco)) > 1:
         antes = f'<span class="antes">{reais(referencia)}</span>'
-    link = texto(voo.get("link"), "#")
+    link = link_ida_volta(
+        texto(voo.get("origem")),
+        texto(voo.get("destino")),
+        texto(voo.get("data_ida"))[:10],
+        texto(voo.get("data_volta"))[:10],
+    )
     pais_html = f'<div class="pais">{html.escape(pais)}</div>' if pais else ""
     return f"""
     <div class="cartao">
@@ -376,7 +385,7 @@ def cartao(voo):
           {badge}
         </div>
         <div class="rota">{html.escape(texto(voo.get("origem")))} → {html.escape(texto(voo.get("destino")))}</div>
-        <div class="datas">{html.escape(periodo(voo.get("data_ida"), voo.get("data_volta")))}</div>
+        <div class="datas">{html.escape(periodo(voo.get("data_ida"), voo.get("data_volta")))} · ida e volta</div>
         <div class="base">
           <div>
             <div class="preco-linha"><span class="preco">{reais(preco)}</span>{antes}</div>
@@ -436,7 +445,12 @@ def passagens(voos):
         desconto = voo.get("desconto_percentual")
         eco = f"{desconto:.0f}%" if pd.notna(desconto) else "—"
         score = f"{voo['score']:.0f}/100" if pd.notna(voo.get("score")) else "—"
-        link = texto(voo.get("link"))
+        link = link_ida_volta(
+            texto(voo.get("origem")),
+            texto(voo.get("destino")),
+            texto(voo.get("data_ida"))[:10],
+            texto(voo.get("data_volta"))[:10],
+        )
         seta = (
             f'<a class="link-voo" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener">Link</a>'
             if link
@@ -446,7 +460,7 @@ def passagens(voos):
             "<tr>"
             f"<td>{html.escape(cidade)}</td>"
             f"<td>{texto(voo.get('origem'))} → {texto(voo.get('destino'))}</td>"
-            f"<td>{periodo(voo.get('data_ida'), voo.get('data_volta'))}</td>"
+            f"<td>{periodo(voo.get('data_ida'), voo.get('data_volta'))} · ida e volta</td>"
             f"<td>✈ {itinerario(voo)}</td>"
             f"<td><b>{reais(voo.get('preco_por_pessoa'))}</b></td>"
             f"<td><span class='eco'>{eco}</span></td>"

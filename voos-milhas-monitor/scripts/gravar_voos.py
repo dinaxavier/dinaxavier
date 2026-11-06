@@ -13,6 +13,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from links import link_ida_volta
+
 RAIZ = Path(__file__).resolve().parents[1]
 CONFIG_PATH = RAIZ / "config-rotina.json"
 
@@ -181,7 +183,7 @@ def linha_de_cotacao(
         "classificacao_logistica": logistica,
         "score": str(score),
         "bagagem_incluida": "",
-        "link": item.get("link") or "",
+        "link": link_ida_volta(origem, destino, item.get("data_ida") or "", item.get("data_volta") or ""),
     }
 
 
