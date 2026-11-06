@@ -1,8 +1,8 @@
-# Rotina semanal — Radar de Voos e Milhas
+# Rotina manual — Radar de Voos e Milhas
 
-Disparo: toda segunda-feira, 07:00 (America/Sao_Paulo). No agendador em UTC isso é 10:00. Cloud Agent — o computador pode estar desligado.
+Não há agendamento. A busca só roda quando alguém pede para atualizar os dados.
 
-Não usa Kiwi, Travelpayouts nem qualquer programa de afiliados. Não envia e-mail. O dashboard lê o CSV que esta rotina atualiza.
+Não usa Kiwi, Travelpayouts nem qualquer programa de afiliados. Não envia e-mail. O dashboard lê o CSV que esta rotina atualiza. A estadia procurada é de 7 a 20 dias.
 
 ## Prompt para a automação
 
@@ -12,7 +12,7 @@ Leia voos-milhas-monitor/config-rotina.json e voos-milhas-monitor/prompt-rotina-
 1. Rode: python3 voos-milhas-monitor/scripts/listar_rotas.py
 2. Para cada rota impressa, abra o link público do Google Flights no navegador.
 3. Toda rota precisa sair de um aeroporto do Brasil (GRU, CGH, VCP ou CNF) para o destino. Descarte itinerário que comece em outro país.
-4. Anote só o que estiver visível na página: menor preço em BRL por pessoa, companhia, datas de ida e volta dentro da janela do config, duração, link, conexões da ida, conexões da volta e se há mudança de aeroporto.
+4. Procure ida e volta com estadia de 7 a 20 dias, dentro da janela de datas do config. Anote só o que estiver visível na página: menor preço em BRL por pessoa, companhia, datas, duração, link, conexões da ida, conexões da volta e se há mudança de aeroporto.
 5. Mudança de aeroporto é quando a conexão chega em um aeroporto e o voo seguinte sai de outro, na mesma cidade ou não. Exemplos: CDG e ORY, LHR e LGW, EWR e JFK. Voo direto não tem mudança. Se a página não mostrar os aeroportos da conexão, grave mudanca_aeroporto como null. Não chute.
 6. Não invente preço, data, companhia, número de conexões nem desconto. Se a página não abrir ou não mostrar preço, omita essa rota.
 7. Grave o que foi visto em voos-milhas-monitor/out/cotacoes.json, neste formato:
@@ -46,24 +46,15 @@ Leia voos-milhas-monitor/config-rotina.json e voos-milhas-monitor/prompt-rotina-
 10. Resposta final curta em português: quantas rotas foram cotadas, quantas ficaram sem preço, quantas têm mudança de aeroporto, e se o CSV foi atualizado.
 ```
 
-## Como ligar no Cursor
+## Quando rodar
 
-No editor de Automations:
+Não crie automação semanal. Rode este prompt só quando a pessoa pedir para atualizar os dados.
 
-| Campo | Valor |
-|---|---|
-| Repositório | dinaxavier/dinaxavier |
-| Cloud Agent | Ativado |
-| Agendamento | Segunda-feira, 07:00, fuso America/Sao_Paulo |
-| Modelo | Composer 2.5, esforço baixo |
-| Prompt | O bloco acima |
-
-Composer 2.5 basta: a tarefa é ler o preço, as conexões e a troca de aeroporto que aparecem na página. Um modelo mais forte gastaria token sem mudar o CSV.
-
-Não há segredo de API. Não há e-mail.
+Modelo: Composer 2.5, esforço baixo. A tarefa é ler o preço, as conexões e a troca de aeroporto que aparecem na página.
 
 ## O que a rotina não faz
 
+- Não dispara sozinha nem em dia fixo.
 - Não estima desconto contra um histórico que ela não viu.
 - Não apaga uma passagem antiga quando a página daquela rota falha.
 - Não abre cadastro de afiliado.

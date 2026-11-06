@@ -123,10 +123,18 @@ def css():
         .cartao .antes {color: #94a3b8; text-decoration: line-through; font-size: 12px; font-weight: 500;}
         .cartao .base {display: flex; justify-content: space-between; align-items: center; margin-top: 4px;}
         .cartao .it {color: #64748b; font-size: 12px;}
-        .seta {
-            width: 28px; height: 28px; border-radius: 999px; background: #1d4ed8; color: white;
-            display: grid; place-items: center; text-decoration: none; font-size: 14px;
+        .link-voo {
+            display: inline-block; color: #475569; background: #f8fafc;
+            border: 1px solid #e2e8f0; border-radius: 8px;
+            padding: 4px 10px; font-size: 13px; font-weight: 600;
+            text-decoration: none; white-space: nowrap;
         }
+        .link-voo:hover { background: #f1f5f9; color: #1e293b; }
+        .stButton > button {
+            background: #f8fafc; color: #334155; border: 1px solid #e2e8f0;
+            border-radius: 8px; font-weight: 600;
+        }
+        .stButton > button:hover { background: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
         .tabela {width: 100%; border-collapse: collapse; background: white; border-radius: 14px; overflow: hidden;}
         .tabela th {text-align: left; color: #64748b; font-weight: 600; font-size: 13px; padding: 12px; background: #f8fafc;}
         .tabela td {padding: 12px; border-top: 1px solid #eef2f7; color: #1e293b; font-size: 14px;}
@@ -344,7 +352,7 @@ def cartao(voo):
             <div class="preco">{reais(preco)} {antes}</div>
             <div class="it">{itinerario(voo)}</div>
           </div>
-          <a class="seta" href="{link}" target="_blank">→</a>
+          <a class="link-voo" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener">Link</a>
         </div>
       </div>
     </div>
@@ -364,7 +372,11 @@ def passagens(voos):
     for coluna, (_, voo) in zip(colunas, destaques.iterrows()):
         coluna.markdown(cartao(voo), unsafe_allow_html=True)
 
-    st.markdown('<div id="todas" class="secao"><h2>Outras oportunidades</h2></div>', unsafe_allow_html=True)
+    titulo, acao = st.columns([4, 1])
+    titulo.markdown('<div id="todas" class="secao"><h2>Outras oportunidades</h2></div>', unsafe_allow_html=True)
+    if acao.button("Atualizar dados"):
+        st.cache_data.clear()
+        st.rerun()
     c1, c2, c3 = st.columns(3)
     origens = ["Todos"] + sorted(voos["origem"].dropna().unique().tolist())
     destinos = ["Todos"] + sorted(voos["destino"].dropna().unique().tolist())
@@ -400,7 +412,7 @@ def passagens(voos):
         score = f"{voo['score']:.0f}/100" if pd.notna(voo.get("score")) else "—"
         link = texto(voo.get("link"))
         seta = (
-            f'<a class="seta" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener">→</a>'
+            f'<a class="link-voo" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener">Link</a>'
             if link
             else "—"
         )
@@ -470,7 +482,12 @@ def configuracoes():
         st.info("Arquivo de rotas não encontrado.")
         return
     config = json.load(open(caminho, encoding="utf-8"))
-    st.write(f"Rotina: {config.get('dia')}, {config.get('horario')} ({config.get('fuso')}).")
+    janela = config.get("janela", {})
+    st.write(
+        "A busca não roda sozinha. Em Atualizar dados, a tabela recarrega o arquivo salvo. "
+        f"Quando uma busca nova for pedida, a estadia é de {janela.get('estadia_dias_min', 7)} "
+        f"a {janela.get('estadia_dias_max', 20)} dias."
+    )
     for grupo in config.get("grupos", []):
         st.markdown(
             f"**{grupo['nome']}**  \n"

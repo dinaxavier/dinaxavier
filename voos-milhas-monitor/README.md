@@ -87,7 +87,7 @@ voos-milhas-monitor/
 │   │   ├── atualizar-planilha.ts  # Integração Google Sheets
 │   │   └── enviar-email.ts        # Envio de relatórios
 │   ├── schedules/
-│   │   └── semanal.ts             # Execução automática (segundas 09:00 UTC)
+│   │   └── (sem agendamento)      # A busca só roda quando for pedida
 │   ├── lib/
 │   │   └── tipos.ts               # Tipos TypeScript compartilhados
 │   └── hooks/

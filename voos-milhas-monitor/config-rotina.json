@@ -1,9 +1,7 @@
 {
   "projeto": "Radar de Voos e Milhas",
   "modo": "repo_cursor",
-  "frequencia": "semanal",
-  "dia": "segunda-feira",
-  "horario": "07:00",
+  "frequencia": "manual",
   "fuso": "America/Sao_Paulo",
   "planilha": "data/voos_ativos.csv",
   "estatisticas": "data/estatisticas.json",
@@ -17,7 +15,7 @@
     "ida_inicio": "2026-12-01",
     "ida_fim": "2027-03-31",
     "estadia_dias_min": 7,
-    "estadia_dias_max": 14
+    "estadia_dias_max": 20
   },
   "grupos": [
     {
