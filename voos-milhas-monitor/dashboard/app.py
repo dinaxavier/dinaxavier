@@ -78,11 +78,21 @@ def css():
         }
         .marca b {display: block; color: #1e3a5f; font-size: 14px; line-height: 1.15;}
         .marca span {color: #64748b; font-size: 12px;}
-        .nav-fixa a {
-            display: block; text-decoration: none; color: #475569;
-            padding: 10px 12px; border-radius: 10px; margin-bottom: 4px; font-size: 14px;
+        div.element-container:has(.nav-radio-ancora) {display: none; height: 0; margin: 0;}
+        div.element-container:has(.nav-radio-ancora) + div.element-container {
+            margin: 0 0 14px 0;
         }
-        .nav-fixa a.ativo {background: #e8eefc; color: #1d4ed8; font-weight: 600;}
+        div.element-container:has(.nav-radio-ancora) + div.element-container [role="radiogroup"] {
+            display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px;
+            background: transparent; border: 0; padding: 0;
+        }
+        div.element-container:has(.nav-radio-ancora) + div.element-container label {
+            background: white; color: #334155; border: 1px solid #e6ebf2;
+            border-radius: 999px; padding: 8px 14px; font-size: 14px;
+        }
+        div.element-container:has(.nav-radio-ancora) + div.element-container label:has(input:checked) {
+            background: #1d4ed8; color: white; border-color: #1d4ed8; font-weight: 600;
+        }
         .hero {
             height: 148px; border-radius: 18px; overflow: hidden; position: relative;
             background: #0f2744 url("https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1600&q=70") center/cover;
@@ -114,7 +124,13 @@ def css():
                 border-right: 0; border-bottom: 1px solid #e8edf5;
             }
             .marca {display: none;}
-            .nav-fixa a {white-space: nowrap; margin: 0; flex: none; padding: 8px 12px;}
+            .nav-lateral {display: none !important;}
+            div.element-container:has(.nav-radio-ancora) + div.element-container [role="radiogroup"] {
+                flex-wrap: nowrap; overflow-x: auto;
+            }
+            div.element-container:has(.nav-radio-ancora) + div.element-container label {
+                white-space: nowrap; flex: none;
+            }
             .pills {overflow-x: auto; padding-bottom: 2px;}
             .secao {flex-direction: column; align-items: flex-start; gap: 4px;}
             .hero {height: auto; min-height: 148px;}
@@ -364,35 +380,46 @@ PAGINAS = [
     ("passagens", "Passagens"),
     ("milhas", "Compra de milhas"),
 ]
+PAGINA_ROTULOS = {chave: rotulo for chave, rotulo in PAGINAS}
+PAGINA_CHAVES = {rotulo: chave for chave, rotulo in PAGINAS}
 
 
 def pagina_atual() -> str:
-    valor = st.query_params.get("pagina", "passagens")
-    if isinstance(valor, list):
-        valor = valor[0] if valor else "passagens"
-    if valor in {"inicio", ""}:
-        return "passagens"
-    return valor if valor in {chave for chave, _ in PAGINAS} else "passagens"
+    # Navegação interna (sem <a href>), para não abrir outro link a cada clique.
+    if "pagina" not in st.session_state:
+        st.session_state.pagina = "passagens"
+    atual = st.session_state.pagina
+    return atual if atual in PAGINA_ROTULOS else "passagens"
 
 
-def nav(ativa: str):
-    itens = []
-    for chave, rotulo in PAGINAS:
-        classe = "ativo" if chave == ativa else ""
-        href = "?" if chave == "passagens" else f"?pagina={chave}"
-        itens.append(f'<a class="{classe}" href="{href}">{rotulo}</a>')
+def nav(ativa: str) -> str:
     st.markdown(
-        f"""
-        <div class="nav-fixa">
+        """
+        <div class="nav-lateral nav-fixa">
           <div class="marca">
             <div class="marca-icone">✈</div>
             <div><b>Radar de<br>Voos & Milhas</b></div>
           </div>
-          {''.join(itens)}
         </div>
         """,
         unsafe_allow_html=True,
     )
+    # Abas internas (radio): troca a tela sem abrir outro link/URL.
+    st.markdown('<div class="nav-radio-ancora"></div>', unsafe_allow_html=True)
+    rotulos = [rotulo for _, rotulo in PAGINAS]
+    indice = next((i for i, (chave, _) in enumerate(PAGINAS) if chave == ativa), 0)
+    escolha = st.radio(
+        "Navegação",
+        rotulos,
+        index=indice,
+        horizontal=True,
+        label_visibility="collapsed",
+        key="nav_pagina_radio",
+    )
+    chave = PAGINA_CHAVES.get(escolha, "passagens")
+    if chave != st.session_state.get("pagina"):
+        st.session_state.pagina = chave
+    return chave
 
 
 def caminho_script_milhas() -> str:
@@ -737,7 +764,7 @@ def milhas_desatualizadas(data_dir: str) -> bool:
 def main():
     css()
     ativa = pagina_atual()
-    nav(ativa)
+    ativa = nav(ativa)
     atualizar_dados()
     data_dir = obter_data_dir()
     # Na primeira carga (ou CSV velho), busca promoções automaticamente uma vez por sessão.
