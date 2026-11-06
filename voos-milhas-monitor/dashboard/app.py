@@ -761,7 +761,6 @@ def main():
     if ativa == "milhas":
         pagina_milhas(tabela_milhas)
         return
-    alertas_milhas(tabela_milhas)
     hero()
     passagens(voos)
 
