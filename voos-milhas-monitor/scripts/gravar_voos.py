@@ -75,6 +75,20 @@ def classificar(conexoes: int) -> tuple[str, int]:
     return "2+ conexões", 70
 
 
+def estadia_dias(ida, volta) -> int | None:
+    try:
+        ida_dt = datetime.strptime(str(ida)[:10], "%Y-%m-%d")
+        volta_dt = datetime.strptime(str(volta)[:10], "%Y-%m-%d")
+    except (TypeError, ValueError):
+        return None
+    return (volta_dt - ida_dt).days
+
+
+def limites_estadia(config: dict) -> tuple[int, int]:
+    janela = config.get("janela") or {}
+    return int(janela.get("estadia_dias_min", 7)), int(janela.get("estadia_dias_max", 15))
+
+
 def numero(valor, padrao: int | None = None) -> int | None:
     if valor is None or valor == "":
         return padrao
@@ -98,7 +112,12 @@ def texto_mudanca(valor) -> str:
 
 
 def linha_de_cotacao(
-    item: dict, cidades: dict, agora: str, origens_brasil: set[str]
+    item: dict,
+    cidades: dict,
+    agora: str,
+    origens_brasil: set[str],
+    estadia_min: int,
+    estadia_max: int,
 ) -> dict | None:
     origem = str(item.get("origem") or "").strip().upper()
     destino = str(item.get("destino") or "").strip().upper()
@@ -112,6 +131,9 @@ def linha_de_cotacao(
     except (TypeError, ValueError):
         return None
     if valor <= 0:
+        return None
+    dias = estadia_dias(item.get("data_ida"), item.get("data_volta"))
+    if dias is None or dias < estadia_min or dias > estadia_max:
         return None
     conexoes_ida = numero(item.get("conexoes_ida"))
     if conexoes_ida is None:
@@ -200,13 +222,21 @@ def gravar(raiz: Path, config: dict, cotacoes: dict, agora: str | None = None) -
     momento = agora or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     cidades = config.get("cidades", {})
     origens_brasil = {codigo.strip().upper() for codigo in config.get("origens_brasil", [])}
+    estadia_min, estadia_max = limites_estadia(config)
     novas = []
     for item in cotacoes.get("itens") or []:
-        linha = linha_de_cotacao(item, cidades, momento, origens_brasil)
+        linha = linha_de_cotacao(
+            item, cidades, momento, origens_brasil, estadia_min, estadia_max
+        )
         if linha:
             novas.append(linha)
     planilha = raiz / config["planilha"]
-    mescladas = mesclar(ler_csv(planilha), novas)
+    mescladas = [
+        linha
+        for linha in mesclar(ler_csv(planilha), novas)
+        if (dias := estadia_dias(linha.get("data_ida"), linha.get("data_volta"))) is not None
+        and estadia_min <= dias <= estadia_max
+    ]
     escrever_csv(planilha, mescladas)
     stats = estatisticas(mescladas, momento, len(novas))
     destino_stats = raiz / config["estatisticas"]

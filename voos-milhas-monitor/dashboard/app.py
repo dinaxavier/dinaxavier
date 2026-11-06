@@ -259,6 +259,17 @@ def itinerario(voo):
     return " · ".join(partes)
 
 
+def limites_estadia():
+    caminho = os.path.join(os.path.dirname(__file__), "..", "config-rotina.json")
+    minimo, maximo = 7, 15
+    if os.path.exists(caminho):
+        with open(caminho, encoding="utf-8") as arquivo:
+            janela = json.load(arquivo).get("janela", {})
+        minimo = int(janela.get("estadia_dias_min", minimo))
+        maximo = int(janela.get("estadia_dias_max", maximo))
+    return minimo, maximo
+
+
 @st.cache_data(ttl=300)
 def carregar_dados(data_dir):
     voos = pd.DataFrame()
@@ -275,6 +286,11 @@ def carregar_dados(data_dir):
         voos["desconto_percentual"] = pd.to_numeric(voos["desconto_percentual"], errors="coerce")
         voos["score"] = pd.to_numeric(voos["score"], errors="coerce")
         voos = voos[voos["origem"].isin(ORIGENS_BRASIL)].copy()
+        minimo, maximo = limites_estadia()
+        ida = pd.to_datetime(voos["data_ida"], errors="coerce")
+        volta = pd.to_datetime(voos["data_volta"], errors="coerce")
+        dias = (volta - ida).dt.days
+        voos = voos[dias.between(minimo, maximo)].copy()
     milhas_path = os.path.join(data_dir, "milhas_ativas.csv")
     if os.path.exists(milhas_path):
         milhas = pd.read_csv(milhas_path)
@@ -496,7 +512,7 @@ def configuracoes():
     st.write(
         "A busca não roda sozinha. Em Atualizar dados, a tabela recarrega o arquivo salvo. "
         f"Quando uma busca nova for pedida, a estadia é de {janela.get('estadia_dias_min', 7)} "
-        f"a {janela.get('estadia_dias_max', 20)} dias."
+        f"a {janela.get('estadia_dias_max', 15)} dias."
     )
     for grupo in config.get("grupos", []):
         st.markdown(

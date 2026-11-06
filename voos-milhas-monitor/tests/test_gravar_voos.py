@@ -56,6 +56,13 @@ class GravarVoosTest(unittest.TestCase):
                         },
                         {"origem": "MCO", "destino": "YUL", "preco": 900, "conexoes_ida": 0},
                         {"origem": "CNF", "destino": "JNB", "preco": None},
+                        {
+                            "origem": "GRU",
+                            "destino": "CDG",
+                            "preco": 5000,
+                            "data_ida": "2027-03-01",
+                            "data_volta": "2027-03-21",
+                        },
                     ]
                 },
                 agora="2026-11-10T10:00:00+00:00",
@@ -71,7 +78,8 @@ class GravarVoosTest(unittest.TestCase):
             self.assertEqual(por_rota[("GRU", "LIS")]["conexoes_volta"], "0")
             self.assertEqual(por_rota[("GRU", "LIS")]["mudanca_aeroporto"], "Sim")
             self.assertEqual(por_rota[("GRU", "LIS")]["aeroportos_conexao"], "LIS e OPO")
-            self.assertEqual(por_rota[("GRU", "MVD")]["id"], "EXEMPLO_012")
+            self.assertNotIn(("GRU", "MVD"), por_rota)
+            self.assertNotIn(("GRU", "CDG"), por_rota)
             self.assertNotIn(("CNF", "JNB"), por_rota)
             self.assertNotIn(("MCO", "YUL"), por_rota)
 
