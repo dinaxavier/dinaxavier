@@ -57,6 +57,14 @@ def css():
         """
         <style>
         #MainMenu, footer, header, [data-testid="stHeader"], [data-testid="stToolbar"] {display: none;}
+        [data-testid="stMain"]::before,
+        [data-testid="stMain"]:focus-visible::before {
+            content: none !important;
+            display: none !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stMain"]:focus,
+        [data-testid="stMain"]:focus-visible {outline: none !important;}
         [data-testid="stAppViewContainer"] {background: #f5f7fb; margin-left: 228px;}
         [data-testid="stAppViewContainer"] .main .block-container {
             padding: 22px 28px 48px 24px;
