@@ -69,12 +69,13 @@ def css():
         [data-testid="stSidebar"] {
             background: #fbfcfe !important;
             border-right: 1px solid #e8edf5;
-            min-width: 248px !important;
+            min-width: 280px !important;
+            width: 280px !important;
         }
-        [data-testid="stSidebar"] > div:first-child {padding: 18px 14px 24px;}
+        [data-testid="stSidebar"] > div:first-child {padding: 18px 16px 24px 14px;}
         [data-testid="stSidebar"] .marca {
             display: flex; gap: 10px; align-items: flex-start;
-            margin: 2px 2px 18px; overflow: visible;
+            margin: 2px 4px 18px 2px; overflow: visible;
         }
         [data-testid="stSidebar"] .marca-icone {
             width: 34px; height: 34px; border-radius: 10px; flex: none;
@@ -83,7 +84,7 @@ def css():
         }
         [data-testid="stSidebar"] .marca b {
             display: block; color: #1e3a5f;
-            font-size: 12.5px; line-height: 1.35; font-weight: 700;
+            font-size: 13px; line-height: 1.4; font-weight: 700;
             white-space: normal; overflow: visible; word-break: normal;
         }
         [data-testid="stSidebar"] [role="radiogroup"] {
@@ -93,8 +94,8 @@ def css():
         [data-testid="stSidebar"] [role="radiogroup"] label {
             background: transparent !important; color: #475569 !important;
             border: 0 !important; border-radius: 10px !important;
-            padding: 10px 12px !important;
-            font-size: 13px !important; line-height: 1.35 !important;
+            padding: 10px 14px 10px 12px !important;
+            font-size: 14px !important; line-height: 1.4 !important;
             white-space: normal !important; overflow: visible !important;
             word-break: break-word !important;
         }
