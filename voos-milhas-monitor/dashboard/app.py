@@ -1,11 +1,17 @@
 import html
+import importlib
 import json
 import os
 import sys
 from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts")))
-from links import link_ida_volta
+import links
+
+# O Streamlit reexecuta este arquivo e mantém o módulo antigo na memória.
+# Sem o reload, o botão continua gerando o link que abre a busca vazia.
+importlib.reload(links)
+link_ida_volta = links.link_ida_volta
 
 import pandas as pd
 import streamlit as st
