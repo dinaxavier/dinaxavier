@@ -20,7 +20,7 @@ st.set_page_config(
     page_title="Radar de Voos & Milhas",
     page_icon="✈️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
@@ -62,44 +62,56 @@ def css():
         [data-testid="stMain"]:focus-visible {outline: none !important;}
         [data-testid="stAppViewContainer"] {background: #f5f7fb;}
         [data-testid="stAppViewContainer"] .main .block-container {
-            padding: 22px 28px 48px 24px;
-            max-width: 1180px;
+            padding: 18px 22px 48px 12px;
+            max-width: 1280px;
         }
-        /* Menu na lateral esquerda (sidebar nativa) */
-        [data-testid="stSidebar"] {
-            background: #fbfcfe !important;
+        /* Esconde a sidebar nativa: usamos coluna esquerda no layout. */
+        [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] {display: none !important;}
+        .nav-rail-ancora {display: none;}
+        /* Coluna esquerda = menu Passagens / Compra de milhas */
+        [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) {
+            align-items: stretch !important;
+            gap: 0.6rem !important;
+        }
+        [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) > div:first-child {
+            background: #fbfcfe;
             border-right: 1px solid #e8edf5;
-            min-width: 280px !important;
-            width: 280px !important;
+            padding: 14px 10px 28px 8px !important;
+            min-height: calc(100vh - 36px);
+            position: sticky; top: 0;
         }
-        [data-testid="stSidebar"] > div:first-child {padding: 18px 16px 24px 14px;}
-        [data-testid="stSidebar"] .marca {
+        [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) > div:last-child {
+            padding-left: 10px !important;
+            min-width: 0;
+        }
+        .nav-rail .marca {
             display: flex; gap: 10px; align-items: flex-start;
-            margin: 2px 4px 18px 2px; overflow: visible;
+            margin: 2px 2px 16px; overflow: visible;
         }
-        [data-testid="stSidebar"] .marca-icone {
+        .nav-rail .marca-icone {
             width: 34px; height: 34px; border-radius: 10px; flex: none;
             background: #2563eb; color: white; display: grid; place-items: center;
             font-size: 15px;
         }
-        [data-testid="stSidebar"] .marca b {
+        .nav-rail .marca b {
             display: block; color: #1e3a5f;
             font-size: 13px; line-height: 1.4; font-weight: 700;
-            white-space: normal; overflow: visible; word-break: normal;
+            white-space: normal; overflow: visible;
         }
-        [data-testid="stSidebar"] [role="radiogroup"] {
-            display: flex; flex-direction: column; gap: 4px;
+        [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) > div:first-child [role="radiogroup"] {
+            display: flex !important; flex-direction: column !important; gap: 4px;
             background: transparent !important; border: 0 !important; padding: 0 !important;
         }
-        [data-testid="stSidebar"] [role="radiogroup"] label {
+        [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) > div:first-child [role="radiogroup"] label {
             background: transparent !important; color: #475569 !important;
             border: 0 !important; border-radius: 10px !important;
-            padding: 10px 14px 10px 12px !important;
-            font-size: 14px !important; line-height: 1.4 !important;
+            padding: 10px 10px !important;
+            font-size: 13px !important; line-height: 1.4 !important;
             white-space: normal !important; overflow: visible !important;
             word-break: break-word !important;
+            min-height: 40px !important;
         }
-        [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+        [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) > div:first-child [role="radiogroup"] label:has(input:checked) {
             background: #e8eefc !important; color: #1d4ed8 !important; font-weight: 600 !important;
         }
         .hero {
@@ -128,14 +140,21 @@ def css():
             width: auto !important; min-height: 36px; padding: 6px 14px;
         }
         @media (max-width: 860px) {
-            [data-testid="stAppViewContainer"] .main .block-container {padding: 16px 14px 36px;}
+            [data-testid="stAppViewContainer"] .main .block-container {padding: 14px 12px 36px;}
+            [data-testid="stHorizontalBlock"]:has(.nav-rail-ancora) > div:first-child {
+                min-height: auto; border-right: 0; border-bottom: 1px solid #e8edf5;
+                margin-bottom: 8px;
+            }
             .pills {overflow-x: auto; padding-bottom: 2px;}
             .secao {flex-direction: column; align-items: flex-start; gap: 4px;}
             .hero .texto {padding: 20px 16px;}
             .hero h1 {font-size: 20px;}
             .hero p {font-size: 13px;}
-            [data-testid="stHorizontalBlock"] {flex-wrap: wrap;}
-            [data-testid="column"] {width: 100% !important; flex: 1 1 100% !important;}
+            /* Não forçar 100% nas colunas do menu: senão o rail sobe e some da esquerda. */
+            [data-testid="stHorizontalBlock"]:not(:has(.nav-rail-ancora)) {flex-wrap: wrap;}
+            [data-testid="stHorizontalBlock"]:not(:has(.nav-rail-ancora)) [data-testid="column"] {
+                width: 100% !important; flex: 1 1 100% !important;
+            }
         }
         .pills {display: flex; gap: 8px; margin: 8px 0 18px; flex-wrap: nowrap;}
         .pills a {
@@ -391,26 +410,28 @@ def pagina_atual() -> str:
 
 
 def nav(ativa: str) -> str:
-    """Menu na lateral esquerda, sem abrir outro link a cada clique."""
-    with st.sidebar:
-        st.markdown(
-            """
-            <div class="marca">
-              <div class="marca-icone">✈</div>
-              <div><b>Radar de<br>Voos &amp; Milhas</b></div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        rotulos = [rotulo for _, rotulo in PAGINAS]
-        indice = next((i for i, (chave, _) in enumerate(PAGINAS) if chave == ativa), 0)
-        escolha = st.radio(
-            "Navegação",
-            rotulos,
-            index=indice,
-            label_visibility="collapsed",
-            key="nav_pagina_radio",
-        )
+    """Menu na coluna esquerda (Passagens / Compra de milhas)."""
+    st.markdown('<div class="nav-rail-ancora"></div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="nav-rail">
+          <div class="marca">
+            <div class="marca-icone">✈</div>
+            <div><b>Radar de<br>Voos &amp; Milhas</b></div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    rotulos = [rotulo for _, rotulo in PAGINAS]
+    indice = next((i for i, (chave, _) in enumerate(PAGINAS) if chave == ativa), 0)
+    escolha = st.radio(
+        "Navegação",
+        rotulos,
+        index=indice,
+        label_visibility="collapsed",
+        key="nav_pagina_radio",
+    )
     chave = PAGINA_CHAVES.get(escolha, "passagens")
     if chave != st.session_state.get("pagina"):
         st.session_state.pagina = chave
@@ -759,20 +780,23 @@ def milhas_desatualizadas(data_dir: str) -> bool:
 def main():
     css()
     ativa = pagina_atual()
-    ativa = nav(ativa)
-    atualizar_dados()
-    data_dir = obter_data_dir()
-    # Na primeira carga (ou CSV velho), busca promoções automaticamente uma vez por sessão.
-    if milhas_desatualizadas(data_dir) and not st.session_state.get("milhas_buscadas"):
-        st.session_state["milhas_buscadas"] = True
-        atualizar_promocoes_milhas()
-        st.cache_data.clear()
-    voos, tabela_milhas, _ = carregar_dados(data_dir)
-    if ativa == "milhas":
-        pagina_milhas(tabela_milhas)
-        return
-    hero()
-    passagens(voos)
+    rail, corpo = st.columns([1.15, 3.85], gap="small")
+    with rail:
+        ativa = nav(ativa)
+    with corpo:
+        atualizar_dados()
+        data_dir = obter_data_dir()
+        # Na primeira carga (ou CSV velho), busca promoções automaticamente uma vez por sessão.
+        if milhas_desatualizadas(data_dir) and not st.session_state.get("milhas_buscadas"):
+            st.session_state["milhas_buscadas"] = True
+            atualizar_promocoes_milhas()
+            st.cache_data.clear()
+        voos, tabela_milhas, _ = carregar_dados(data_dir)
+        if ativa == "milhas":
+            pagina_milhas(tabela_milhas)
+            return
+        hero()
+        passagens(voos)
 
 
 main()
