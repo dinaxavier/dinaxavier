@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Grava no CSV só ida e volta vista, pelo menos 30% abaixo da média vista.
+"""Grava no CSV só ida e volta vista, pelo menos 25% abaixo da média vista.
 
 Rotas ausentes em out/cotacoes.json permanecem se ainda cumprirem a regra.
 Sem a média vista na página, a cotação não entra.
@@ -92,7 +92,7 @@ def limites_estadia(config: dict) -> tuple[int, int]:
 
 
 def desconto_minimo(config: dict) -> float:
-    return float(config.get("desconto_minimo_percentual", 30))
+    return float(config.get("desconto_minimo_percentual", 25))
 
 
 def percentual_abaixo(preco, media) -> float | None:

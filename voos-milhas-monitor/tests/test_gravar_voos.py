@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""A rotina só grava ida e volta pelo menos 30% abaixo da média vista."""
+"""A rotina só grava ida e volta pelo menos 25% abaixo da média vista."""
 
+import base64
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import sys
 
@@ -12,6 +14,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "scripts"))
 
 import gravar_voos  # noqa: E402
+import links  # noqa: E402
 
 
 class GravarVoosTest(unittest.TestCase):
@@ -82,7 +85,7 @@ class GravarVoosTest(unittest.TestCase):
                         {
                             "origem": "GRU",
                             "destino": "FCO",
-                            "preco": 3505,
+                            "preco": 4000,
                             "preco_medio": 5000,
                             "data_ida": "2027-02-02",
                             "data_volta": "2027-02-12",
@@ -113,9 +116,15 @@ class GravarVoosTest(unittest.TestCase):
             self.assertEqual(por_rota[("GRU", "LIS")]["conexoes_volta"], "0")
             self.assertEqual(por_rota[("GRU", "LIS")]["mudanca_aeroporto"], "Sim")
             self.assertEqual(por_rota[("GRU", "LIS")]["aeroportos_conexao"], "LIS e OPO")
-            self.assertIn("ida%20e%20volta", por_rota[("GRU", "LIS")]["link"])
-            self.assertIn("2027-02-01", por_rota[("GRU", "LIS")]["link"])
-            self.assertIn("2027-02-10", por_rota[("GRU", "LIS")]["link"])
+            self.assertEqual(
+                por_rota[("GRU", "LIS")]["link"],
+                links.link_ida_volta("GRU", "LIS", "2027-02-01", "2027-02-10"),
+            )
+            bruto = _tfs_de(por_rota[("GRU", "LIS")]["link"])
+            self.assertIn(b"GRU", bruto)
+            self.assertIn(b"LIS", bruto)
+            self.assertIn(b"2027-02-01", bruto)
+            self.assertIn(b"2027-02-10", bruto)
             self.assertNotIn(("GRU", "MVD"), por_rota)
             self.assertNotIn(("GRU", "EZE"), por_rota)
             self.assertNotIn(("GRU", "CDG"), por_rota)
@@ -123,6 +132,28 @@ class GravarVoosTest(unittest.TestCase):
             self.assertNotIn(("GRU", "BCN"), por_rota)
             self.assertNotIn(("CNF", "JNB"), por_rota)
             self.assertNotIn(("MCO", "YUL"), por_rota)
+
+
+def _tfs_de(url: str) -> bytes:
+    tfs = parse_qs(urlparse(url).query)["tfs"][0]
+    return base64.urlsafe_b64decode(tfs + "=" * ((4 - len(tfs) % 4) % 4))
+
+
+class LinksTest(unittest.TestCase):
+    def test_tfs_preenche_ida_e_volta(self):
+        conhecido = (
+            "CBwQAhoeEgoyMDI0LTA1LTI4agcIARIDVFBFcgcIARIDTVlKGh4SCjIwMjQtMDUtMz"
+            "BqBwgBEgNNWUpyBwgBEgNUUEVAAUgBcAGCAQsI____________AZgBAQ"
+        )
+        self.assertEqual(links.tfs_ida_volta("TPE", "MYJ", "2024-05-28", "2024-05-30"), conhecido)
+        url = links.link_ida_volta("GRU", "LIS", "2027-01-15", "2027-01-25")
+        self.assertIn("/travel/flights/search?tfs=", url)
+        self.assertIn("curr=BRL", url)
+        bruto = _tfs_de(url)
+        self.assertEqual(bruto.count(b"GRU"), 2)
+        self.assertEqual(bruto.count(b"LIS"), 2)
+        self.assertIn(b"2027-01-15", bruto)
+        self.assertIn(b"2027-01-25", bruto)
 
 
 if __name__ == "__main__":

@@ -42,7 +42,7 @@ def rotas(config: dict) -> list[dict]:
 def main() -> int:
     config = carregar()
     itens = rotas(config)
-    minimo = config.get("desconto_minimo_percentual", 30)
+    minimo = config.get("desconto_minimo_percentual", 25)
     print(
         f"{len(itens)} rotas. Janela {config['janela']['ida_inicio']} a {config['janela']['ida_fim']}. "
         f"Ida e volta, pelo menos {minimo:.0f}% abaixo da média."

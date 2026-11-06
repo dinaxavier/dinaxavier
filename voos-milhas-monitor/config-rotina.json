@@ -17,7 +17,7 @@
     "estadia_dias_min": 7,
     "estadia_dias_max": 15
   },
-  "desconto_minimo_percentual": 30,
+  "desconto_minimo_percentual": 25,
   "grupos": [
     {
       "nome": "Europa e Islândia",

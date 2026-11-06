@@ -278,7 +278,7 @@ def limites_estadia():
 
 
 def desconto_minimo():
-    return float(ler_config().get("desconto_minimo_percentual", 30))
+    return float(ler_config().get("desconto_minimo_percentual", 25))
 
 
 @st.cache_data(ttl=300)
@@ -543,7 +543,7 @@ def configuracoes():
         "A busca não roda sozinha. Em Atualizar dados, a tabela recarrega o arquivo salvo. "
         f"Quando uma busca nova for pedida, entra só ida e volta de {janela.get('estadia_dias_min', 7)} "
         f"a {janela.get('estadia_dias_max', 15)} dias, com o preço pelo menos "
-        f"{config.get('desconto_minimo_percentual', 30):.0f}% abaixo da média vista na página."
+        f"{config.get('desconto_minimo_percentual', 25):.0f}% abaixo da média vista na página."
     )
     for grupo in config.get("grupos", []):
         st.markdown(
