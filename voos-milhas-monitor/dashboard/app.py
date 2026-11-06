@@ -437,7 +437,7 @@ def passagens(voos):
             f"Nenhuma passagem de ida e volta está pelo menos {desconto_minimo():.0f}% abaixo da média."
         )
         return
-    destaques = voos.sort_values("score", ascending=False).head(3)
+    destaques = voos.sort_values(["desconto_percentual", "score"], ascending=False).head(3)
     colunas = st.columns(3)
     for coluna, (_, voo) in zip(colunas, destaques.iterrows()):
         coluna.markdown(cartao(voo), unsafe_allow_html=True)
@@ -471,7 +471,7 @@ def passagens(voos):
         filtrados = filtrados[filtrados["mudanca_aeroporto"].fillna("").astype(str) == mudanca]
 
     linhas = []
-    for _, voo in filtrados.sort_values("score", ascending=False).iterrows():
+    for _, voo in filtrados.sort_values(["desconto_percentual", "score"], ascending=False).iterrows():
         cidade, _, _, _ = lugar(voo.get("destino"))
         desconto = desconto_visto(voo)
         eco = f"{desconto:.0f}%" if desconto is not None else "—"
@@ -513,8 +513,9 @@ def passagens(voos):
         unsafe_allow_html=True,
     )
     st.caption(
-        f"{len(filtrados)} passagens de ida e volta. O preço é o menor valor por pessoa que o link mostra agora. "
-        "Saída sempre de um aeroporto no Brasil."
+        f"{len(filtrados)} passagens de ida e volta, com estadia de 7 a 15 dias. "
+        "O preço é o menor valor por pessoa no link. O percentual aparece quando ele fica pelo menos "
+        f"{desconto_minimo():.0f}% abaixo do preço normal."
     )
 
 
