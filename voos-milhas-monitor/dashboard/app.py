@@ -540,18 +540,6 @@ def montar_balao_milhas(item) -> str:
     )
 
 
-def alertas_milhas(tabela, limite: int = 5):
-    ativas = promocoes_ativas(tabela)
-    if not ativas:
-        return
-    # No topo da página de passagens, só os melhores avisos.
-    blocos = [montar_balao_milhas(item) for item in ativas[:limite]]
-    st.markdown(
-        "<div class='alertas-milhas'>" + "".join(blocos) + "</div>",
-        unsafe_allow_html=True,
-    )
-
-
 def pagina_milhas(tabela):
     st.markdown(
         '<div class="secao"><h2>Compra de milhas</h2></div>',
