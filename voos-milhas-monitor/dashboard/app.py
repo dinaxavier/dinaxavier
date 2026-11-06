@@ -34,6 +34,14 @@ LUGARES = {
     "MCO": ("Orlando", "Estados Unidos", "🇺🇸", "https://images.unsplash.com/photo-1575089776834-8be34696ffb9?auto=format&fit=crop&w=480&q=70"),
 }
 
+ICONES = {
+    "aviao": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>',
+    "estrela": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 14.9 8.8 21 9.6 16.5 14 17.7 20.2 12 17.2 6.3 20.2 7.5 14 3 9.6 9.1 8.8"/></svg>',
+    "desconto": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="7.5" cy="7.5" r="2.1"/><circle cx="16.5" cy="16.5" r="2.1"/></svg>',
+    "milheiro": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.2 10.2h5.2a1.7 1.7 0 0 1 0 3.4h-4.4a1.7 1.7 0 0 0 0 3.4h5.2"/></svg>',
+    "calendario": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M8 3.5v3M16 3.5v3M3.5 10h17"/></svg>',
+}
+
 PAGINAS = [
     ("inicio", "Início"),
     ("passagens", "Passagens Aéreas"),
@@ -84,20 +92,56 @@ def css():
         .hero .texto {position: relative; padding: 36px 32px; color: white;}
         .hero h1 {margin: 0; font-size: 32px; letter-spacing: -0.4px;}
         .hero p {margin: 4px 0 0; opacity: .92;}
-        .metricas {display: flex; gap: 12px; margin-bottom: 16px;}
-        .metrica {
-            flex: 1; background: white; border-radius: 14px; padding: 12px 14px;
-            box-shadow: 0 1px 2px rgba(15,23,42,.04); border: 1px solid #eef2f7;
-            display: flex; gap: 10px; align-items: center;
+        .metricas {
+            display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px; margin-bottom: 16px;
         }
-        .metrica .ico {font-size: 18px;}
-        .metrica b {display: block; color: #0f172a; font-size: 18px;}
-        .metrica span {color: #64748b; font-size: 12px;}
-        .pills {display: flex; gap: 8px; margin: 8px 0 18px;}
+        .metrica {
+            background: white; border-radius: 16px; padding: 16px 14px;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04); border: 1px solid #e8edf5;
+            display: flex; gap: 12px; align-items: center; min-height: 88px; min-width: 0;
+        }
+        .metrica .ico {
+            width: 40px; height: 40px; border-radius: 12px; flex: 0 0 40px;
+            background: #f3f6fb; color: #1e3a5f;
+            display: grid; place-items: center; position: relative;
+        }
+        .metrica .ico svg {width: 20px; height: 20px; display: block;}
+        .metrica .txt {min-width: 0;}
+        .metrica b {
+            display: block; color: #0f172a; font-size: 22px; line-height: 1.1;
+            letter-spacing: -0.3px; font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        .metrica.quando b {font-size: 16px; letter-spacing: -0.2px;}
+        .metrica span {display: block; margin-top: 3px; color: #64748b; font-size: 12.5px; line-height: 1.3;}
+        @media (max-width: 1100px) {
+            .metricas {grid-template-columns: repeat(3, minmax(0, 1fr));}
+        }
+        @media (max-width: 860px) {
+            [data-testid="stAppViewContainer"] {margin-left: 0;}
+            [data-testid="stAppViewContainer"] .main .block-container {padding: 68px 14px 36px;}
+            .nav-fixa {
+                left: 0; right: 0; top: 0; bottom: auto; width: auto; height: auto;
+                display: flex; gap: 4px; overflow-x: auto; padding: 8px 10px;
+                border-right: 0; border-bottom: 1px solid #e8edf5;
+            }
+            .marca {display: none;}
+            .nav-fixa a {white-space: nowrap; margin: 0; flex: none; padding: 8px 12px;}
+            .metricas {grid-template-columns: 1fr 1fr;}
+            .metrica.quando {grid-column: 1 / -1;}
+            .pills {overflow-x: auto; padding-bottom: 2px;}
+            .secao {flex-direction: column; align-items: flex-start; gap: 4px;}
+            .hero {height: auto; min-height: 148px;}
+            .hero h1 {font-size: 26px;}
+            .hero .texto {padding: 24px 18px 22px;}
+            [data-testid="stHorizontalBlock"] {flex-wrap: wrap;}
+            [data-testid="column"] {width: 100% !important; flex: 1 1 100% !important;}
+        }
+        .pills {display: flex; gap: 8px; margin: 8px 0 18px; flex-wrap: nowrap;}
         .pills a {
             text-decoration: none; background: white; color: #334155;
             border-radius: 999px; padding: 8px 14px; font-size: 14px;
-            border: 1px solid #e6ebf2;
+            border: 1px solid #e6ebf2; white-space: nowrap;
         }
         .pills a.ativo {background: #1d4ed8; color: white; border-color: #1d4ed8;}
         .secao {display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px;}
@@ -105,29 +149,32 @@ def css():
         .secao a {color: #2563eb; text-decoration: none; font-size: 14px;}
         .cartao {
             background: white; border-radius: 16px; overflow: hidden;
-            border: 1px solid #e8edf5; display: flex; min-height: 132px;
+            border: 1px solid #e8edf5; display: flex; align-items: stretch;
+            min-height: 156px; height: 100%;
             box-shadow: 0 8px 20px rgba(15,23,42,.04);
         }
-        .cartao img {width: 112px; height: 132px; object-fit: cover;}
-        .cartao .miolo {padding: 12px 12px 10px; flex: 1;}
-        .cartao .topo {display: flex; justify-content: space-between; gap: 8px;}
-        .cartao h3 {margin: 0; font-size: 16px; color: #0f172a;}
-        .cartao .pais {color: #64748b; font-weight: 500; font-size: 13px;}
+        .cartao .foto {width: 124px; flex: 0 0 124px; background-size: cover; background-position: center;}
+        .cartao .miolo {padding: 14px 14px 12px; flex: 1; min-width: 0; display: flex; flex-direction: column;}
+        .cartao .topo {display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;}
+        .cartao h3 {margin: 0; font-size: 17px; line-height: 1.2; color: #0f172a;}
+        .cartao .pais {color: #64748b; font-weight: 500; font-size: 13px; margin-top: 2px;}
         .badge {
+            flex: none; align-self: flex-start; line-height: 1.2; white-space: nowrap;
             background: #e8f8ef; color: #15803d; border-radius: 999px;
-            padding: 3px 8px; font-size: 13px; font-weight: 700;
+            padding: 4px 8px; font-size: 12px; font-weight: 700;
         }
-        .cartao .rota {color: #334155; font-size: 13px; margin-top: 8px;}
-        .cartao .datas {color: #64748b; font-size: 12px;}
-        .cartao .preco {font-size: 20px; font-weight: 750; color: #0f172a; margin-top: 6px;}
+        .cartao .rota {color: #334155; font-size: 13px; font-weight: 600; margin-top: 10px;}
+        .cartao .datas {color: #64748b; font-size: 12px; margin-top: 1px;}
+        .cartao .base {display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-top: auto; padding-top: 10px;}
+        .cartao .preco-linha {display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;}
+        .cartao .preco {font-size: 20px; font-weight: 750; color: #0f172a; letter-spacing: -0.3px;}
         .cartao .antes {color: #94a3b8; text-decoration: line-through; font-size: 12px; font-weight: 500;}
-        .cartao .base {display: flex; justify-content: space-between; align-items: center; margin-top: 4px;}
-        .cartao .it {color: #64748b; font-size: 12px;}
+        .cartao .it {color: #64748b; font-size: 12px; margin-top: 2px;}
         .link-voo {
             display: inline-block; color: #475569; background: #f8fafc;
             border: 1px solid #e2e8f0; border-radius: 8px;
-            padding: 4px 10px; font-size: 13px; font-weight: 600;
-            text-decoration: none; white-space: nowrap;
+            padding: 5px 12px; font-size: 13px; font-weight: 600;
+            text-decoration: none; white-space: nowrap; line-height: 1.2;
         }
         .link-voo:hover { background: #f1f5f9; color: #1e293b; }
         .stButton > button {
@@ -288,31 +335,40 @@ def hero():
     )
 
 
+def quando_curto(valor):
+    bruto = texto(valor)
+    if not bruto:
+        return "—"
+    try:
+        momento = datetime.fromisoformat(bruto.replace("Z", "+00:00"))
+    except ValueError:
+        return bruto[:16]
+    return momento.strftime("%d/%m · %H:%M")
+
+
+def metrica(icone, valor, rotulo, extra=""):
+    return (
+        f'<div class="metrica {extra}">'
+        f'<span class="ico">{ICONES[icone]}</span>'
+        f'<div class="txt"><b>{valor}</b><span>{rotulo}</span></div>'
+        f"</div>"
+    )
+
+
 def metricas(voos, stats):
     total = len(voos)
     novas = stats.get("novas_semana", total)
     maior = stats.get("maior_desconto", 0)
     milheiro = stats.get("melhor_custo_milheiro") or 0
-    atualizado = texto(stats.get("ultima_atualizacao"))
-    quando = "—"
-    if atualizado:
-        try:
-            quando = datetime.fromisoformat(atualizado.replace("Z", "+00:00")).strftime("%d/%m/%Y às %H:%M")
-        except ValueError:
-            quando = atualizado[:16]
     milheiro_txt = reais(milheiro / 100) if milheiro > 20 else reais(milheiro)
-    st.markdown(
-        f"""
-        <div class="metricas">
-          <div class="metrica"><div class="ico">✈</div><div><b>{total}</b><span>oportunidades ativas</span></div></div>
-          <div class="metrica"><div class="ico">☆</div><div><b>{novas}</b><span>novas na semana</span></div></div>
-          <div class="metrica"><div class="ico">🏷</div><div><b>{abs(float(maior)):.0f}%</b><span>maior desconto</span></div></div>
-          <div class="metrica"><div class="ico">◉</div><div><b>{milheiro_txt}</b><span>melhor custo por milheiro</span></div></div>
-          <div class="metrica"><div class="ico">🗓</div><div><b>{quando}</b><span>última atualização · monitoramento ativo</span></div></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    cards = [
+        metrica("aviao", total, "oportunidades ativas"),
+        metrica("estrela", novas, "novas na semana"),
+        metrica("desconto", f"{abs(float(maior)):.0f}%", "maior desconto"),
+        metrica("milheiro", milheiro_txt, "melhor custo por milheiro"),
+        metrica("calendario", quando_curto(stats.get("ultima_atualizacao")), "última atualização", "quando"),
+    ]
+    st.markdown(f'<div class="metricas">{"".join(cards)}</div>', unsafe_allow_html=True)
 
 
 def pills(ativa):
@@ -326,31 +382,35 @@ def pills(ativa):
 
 
 def cartao(voo):
-    cidade, pais, bandeira, foto = lugar(voo.get("destino"))
+    cidade, pais, _, foto = lugar(voo.get("destino"))
     if not foto:
         foto = "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=480&q=70"
     desconto = voo.get("desconto_percentual")
-    badge = f"{desconto:.0f}%" if pd.notna(desconto) else ""
+    badge = f'<span class="badge">{desconto:.0f}%</span>' if pd.notna(desconto) else ""
     referencia = voo.get("preco_referencia")
     preco = voo.get("preco_por_pessoa")
     antes = ""
     if pd.notna(referencia) and pd.notna(preco) and abs(float(referencia) - float(preco)) > 1:
-        antes = f'<div class="antes">{reais(referencia)}</div>'
+        antes = f'<span class="antes">{reais(referencia)}</span>'
     link = texto(voo.get("link"), "#")
+    pais_html = f'<div class="pais">{html.escape(pais)}</div>' if pais else ""
     return f"""
     <div class="cartao">
-      <img src="{foto}" alt="{cidade}">
+      <div class="foto" style="background-image:url('{html.escape(foto, quote=True)}')"></div>
       <div class="miolo">
         <div class="topo">
-          <h3>{cidade} <span class="pais">{bandeira} {pais}</span></h3>
-          <span class="badge">{badge}</span>
+          <div>
+            <h3>{html.escape(cidade)}</h3>
+            {pais_html}
+          </div>
+          {badge}
         </div>
-        <div class="rota">{texto(voo.get("origem"))} → {texto(voo.get("destino"))}</div>
-        <div class="datas">{periodo(voo.get("data_ida"), voo.get("data_volta"))}</div>
+        <div class="rota">{html.escape(texto(voo.get("origem")))} → {html.escape(texto(voo.get("destino")))}</div>
+        <div class="datas">{html.escape(periodo(voo.get("data_ida"), voo.get("data_volta")))}</div>
         <div class="base">
           <div>
-            <div class="preco">{reais(preco)} {antes}</div>
-            <div class="it">{itinerario(voo)}</div>
+            <div class="preco-linha"><span class="preco">{reais(preco)}</span>{antes}</div>
+            <div class="it">{html.escape(itinerario(voo))}</div>
           </div>
           <a class="link-voo" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener">Link</a>
         </div>
@@ -406,7 +466,7 @@ def passagens(voos):
 
     linhas = []
     for _, voo in filtrados.sort_values("score", ascending=False).iterrows():
-        cidade, pais, bandeira, _ = lugar(voo.get("destino"))
+        cidade, _, _, _ = lugar(voo.get("destino"))
         desconto = voo.get("desconto_percentual")
         eco = f"{desconto:.0f}%" if pd.notna(desconto) else "—"
         score = f"{voo['score']:.0f}/100" if pd.notna(voo.get("score")) else "—"
@@ -418,7 +478,7 @@ def passagens(voos):
         )
         linhas.append(
             "<tr>"
-            f"<td>{bandeira} {cidade}</td>"
+            f"<td>{html.escape(cidade)}</td>"
             f"<td>{texto(voo.get('origem'))} → {texto(voo.get('destino'))}</td>"
             f"<td>{periodo(voo.get('data_ida'), voo.get('data_volta'))}</td>"
             f"<td>✈ {itinerario(voo)}</td>"
