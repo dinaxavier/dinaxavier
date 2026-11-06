@@ -2,7 +2,7 @@
 
 Não há agendamento. A busca só roda quando alguém pede para atualizar os dados.
 
-Não usa Kiwi, Travelpayouts nem qualquer programa de afiliados. Não envia e-mail. O dashboard lê o CSV que esta rotina atualiza. A estadia procurada é de 7 a 20 dias.
+Não usa Kiwi, Travelpayouts nem qualquer programa de afiliados. Não envia e-mail. A rotina grava o que viu em `data/voos_ativos.csv`. A estadia procurada é de 7 a 20 dias.
 
 ## Prompt para a automação
 

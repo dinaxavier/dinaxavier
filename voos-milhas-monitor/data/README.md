@@ -8,7 +8,7 @@ Este diretório contém os arquivos CSV gerados automaticamente pelo agente.
 - **milhas_ativas.csv** - Promoções de compra de milhas
 - **historico.csv** - Histórico completo (append-only)
 - **logs.csv** - Logs de execução do agente
-- **estatisticas.json** - Métricas para o dashboard
+- **estatisticas.json** - Resumo da última rodada
 
 ## 🔄 Atualização
 
@@ -23,18 +23,6 @@ Estes arquivos são atualizados:
 cd /workspace/voos-milhas-monitor
 node testar-csv.js
 git add data/ && git commit -m "data: update" && git push
-```
-
-## 📊 Dashboard
-
-O dashboard Streamlit lê estes arquivos diretamente:
-
-```python
-import pandas as pd
-import os
-
-DATA_DIR = os.environ.get('CSV_DATA_DIR', './data')
-voos_df = pd.read_csv(os.path.join(DATA_DIR, 'voos_ativos.csv'))
 ```
 
 ## 🚫 .gitignore

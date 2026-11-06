@@ -1,13 +1,12 @@
 # 🛫 Monitor de Voos e Milhas
 
-Agente de inteligência de preços de passagens aéreas e programas de fidelidade, com validação semanal automática e dashboard Streamlit.
+Agente de inteligência de preços de passagens aéreas e programas de fidelidade. Os preços ficam nos CSV em `data/`.
 
 ## 📚 Documentação
 
 - **[⚡ QUICK_START.md](QUICK_START.md)** - Começar em 5 minutos
 - **[📁 SETUP_CSV.md](SETUP_CSV.md)** - Sistema de armazenamento CSV
 - **[🔌 SETUP_APIS.md](SETUP_APIS.md)** - Configuração de APIs
-- **[🎨 dashboard/README.md](dashboard/README.md)** - Customizar dashboard
 - **[📋 CHANGELOG.md](CHANGELOG.md)** - Histórico de mudanças
 
 ## 🚀 Início Rápido
@@ -22,9 +21,6 @@ nano .env  # Adicionar KIWI_API_KEY
 
 # Testar
 node testar-csv.js
-
-# Dashboard
-cd dashboard && streamlit run app.py
 ```
 
 **Leia [QUICK_START.md](QUICK_START.md) para tutorial completo!**
@@ -164,34 +160,6 @@ npx @grok/agent-sdk eval --dir ./voos-milhas-monitor
 
 ```bash
 npx @grok/agent-sdk run --dir ./voos-milhas-monitor --message "Busque passagens de GRU para CDG"
-```
-
-## 📊 Dashboard Streamlit
-
-O dashboard lê os arquivos CSV gerados pelo agente:
-
-```bash
-# Navegar para pasta do dashboard
-cd dashboard
-
-# Criar ambiente virtual
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate  # Windows
-
-# Instalar dependências
-pip install -r requirements.txt
-
-# Configurar variável de ambiente
-export CSV_DATA_DIR=../data  # Linux/Mac
-# ou
-set CSV_DATA_DIR=../data  # Windows
-
-# Executar localmente
-streamlit run app.py
-
-# Abrir navegador em http://localhost:8501
 ```
 
 ## 🔐 Configuração da Kiwi API
