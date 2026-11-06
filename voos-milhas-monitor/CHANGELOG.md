@@ -35,6 +35,13 @@
 
 ## [3.0.0] - 2026-11-06
 
+### Matriz: 6 meses + São Luís + amostra espalhada
+
+- Janela relativa `meses_a_frente: 6` (varre ~27 idas semanais).
+- Estratégia `espalhada`: até 3 datas por rota por rodada (não esgota uma rota só).
+- Origem **SLZ (São Luís/MA)** incluída nos grupos de busca.
+- `max_celulas_por_rodada` sobe para 180 (~177 células / rodada com a config atual).
+
 ### Rotina: matriz de datas + baseline + alerta
 
 - `scripts/matriz.py` gera células `rota × ida × estadia` e amostra com rotação (`max_celulas_por_rodada`).

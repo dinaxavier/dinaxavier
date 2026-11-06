@@ -14,7 +14,7 @@ Leia voos-milhas-monitor/config-rotina.json e voos-milhas-monitor/prompt-rotina-
 1. Rode: python3 voos-milhas-monitor/scripts/listar_rotas.py
    Cada linha impressa é uma célula da matriz: origem, destino, data_ida, data_volta e link já com essas datas.
 2. Para cada célula impressa, abra o link público do Google Flights no navegador.
-3. Toda rota precisa sair de um aeroporto do Brasil (GRU, CGH, VCP ou CNF) para o destino. Descarte itinerário que comece em outro país.
+3. Toda rota precisa sair de um aeroporto do Brasil (GRU, CGH, VCP, CNF ou SLZ — São Luís/MA) para o destino. Descarte itinerário que comece em outro país.
 4. A célula já define ida, volta e estadia. Anote o menor preço em BRL por pessoa para exatamente essas datas (ida e volta). Se a página mostrar média ou preço típico da rota, anote em preco_medio (bootstrap do baseline). Se não mostrar, omita preco_medio — não invente. Anote também companhia, duração, conexões da ida, conexões da volta e se há mudança de aeroporto.
 5. Mudança de aeroporto é quando a conexão chega em um aeroporto e o voo seguinte sai de outro. Exemplos: CDG e ORY, LHR e LGW, EWR e JFK. Voo direto não tem mudança. Se a página não mostrar os aeroportos da conexão, grave mudanca_aeroporto como null. Não chute.
 6. Não invente preço, data, companhia, número de conexões nem desconto. O preço gravado é o menor valor de ida e volta visível no link da célula. Se a página não abrir ou não mostrar preço, omita essa célula.
@@ -65,7 +65,7 @@ Modelo: Composer 2.5, esforço baixo. A tarefa é ler o preço e a logística de
 
 ## O que a rotina faz de diferente agora
 
-- **Matriz**: não busca “qualquer data na janela”; amostra rota × ida (a cada `passo_ida_dias`) × estadias configuradas, com rotação entre rodadas.
+- **Matriz**: cobre os próximos `meses_a_frente` (padrão 6); amostra rota × ida (a cada `passo_ida_dias`) × estadias com estratégia **espalhada** (várias datas por rota por rodada, não uma rota de cada vez).
 - **Baseline**: histórico próprio em `data/observacoes.csv`; alerta compara com a mediana da rota, não só com o “melhor da página”.
 - **Alerta**: só entra em `voos_ativos` / `alertas` se estiver ≥ X% abaixo da referência.
 

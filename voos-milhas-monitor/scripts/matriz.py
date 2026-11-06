@@ -22,9 +22,22 @@ def _parse_data(texto: str) -> datetime:
     return datetime.strptime(str(texto)[:10], "%Y-%m-%d")
 
 
-def datas_ida(janela: dict, passo: int) -> list[str]:
-    inicio = _parse_data(janela["ida_inicio"])
-    fim = _parse_data(janela["ida_fim"])
+def resolver_janela(janela: dict, hoje: datetime | None = None) -> tuple[datetime, datetime]:
+    """Resolve ida_inicio/ida_fim; meses_a_frente cobre os próximos N meses a partir de hoje."""
+    ref = hoje or datetime.now()
+    meses = janela.get("meses_a_frente")
+    if meses not in (None, ""):
+        inicio = ref.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        # ~30,4 dias/mês — cobre a janela pedida sem travar datas fixas no config.
+        fim = inicio + timedelta(days=max(int(meses), 1) * 30)
+        return inicio, fim
+    if not janela.get("ida_inicio") or not janela.get("ida_fim"):
+        raise ValueError("janela precisa de meses_a_frente ou ida_inicio/ida_fim")
+    return _parse_data(janela["ida_inicio"]), _parse_data(janela["ida_fim"])
+
+
+def datas_ida(janela: dict, passo: int, hoje: datetime | None = None) -> list[str]:
+    inicio, fim = resolver_janela(janela, hoje=hoje)
     if fim < inicio:
         return []
     passo = max(int(passo), 1)
@@ -74,10 +87,10 @@ def rotas_config(config: dict) -> list[dict]:
     return saida
 
 
-def gerar_celulas(config: dict) -> list[dict]:
+def gerar_celulas(config: dict, hoje: datetime | None = None) -> list[dict]:
     matriz = config.get("matriz") or {}
     passo = int(matriz.get("passo_ida_dias", 7))
-    idas = datas_ida(config.get("janela") or {}, passo)
+    idas = datas_ida(config.get("janela") or {}, passo, hoje=hoje)
     estadias = estadias_config(config)
     celulas = []
     for rota in rotas_config(config):
@@ -98,6 +111,61 @@ def gerar_celulas(config: dict) -> list[dict]:
                     }
                 )
     return celulas
+
+
+def _chave_rota(celula: dict) -> str:
+    return f"{celula.get('origem')}_{celula.get('destino')}"
+
+
+def amostrar_espalhada(
+    celulas: list[dict],
+    limite: int,
+    datas_por_rota: int,
+    offset: int,
+) -> list[dict]:
+    """Espalha a amostra: todas as rotas entram antes de repetir datas."""
+    if not celulas or limite <= 0:
+        return []
+    por_rota: dict[str, list[dict]] = {}
+    ordem_rotas: list[str] = []
+    for celula in celulas:
+        chave = _chave_rota(celula)
+        if chave not in por_rota:
+            por_rota[chave] = []
+            ordem_rotas.append(chave)
+        por_rota[chave].append(celula)
+
+    datas_por_rota = max(int(datas_por_rota), 1)
+    # Pré-calcula índices de data por rota (início/meio/fim + rotação).
+    indices_por_rota: dict[str, list[int]] = {}
+    for chave, lista in por_rota.items():
+        n = len(lista)
+        if datas_por_rota >= n:
+            indices_por_rota[chave] = list(range(n))
+        else:
+            passo = n / datas_por_rota
+            indices_por_rota[chave] = [
+                int((offset + i) * passo) % n for i in range(datas_por_rota)
+            ]
+
+    amostra: list[dict] = []
+    vistos: set[str] = set()
+    max_camadas = max((len(v) for v in indices_por_rota.values()), default=0)
+    for camada in range(max_camadas):
+        for chave in ordem_rotas:
+            indices = indices_por_rota.get(chave) or []
+            if camada >= len(indices):
+                continue
+            lista = por_rota[chave]
+            escolhida = lista[indices[camada] % len(lista)]
+            cid = escolhida.get("id_celula") or f"{chave}_{camada}"
+            if cid in vistos:
+                continue
+            vistos.add(cid)
+            amostra.append(escolhida)
+            if len(amostra) >= limite:
+                return amostra
+    return amostra
 
 
 def caminho_estado(config: dict, raiz: Path | None = None) -> Path:
@@ -136,23 +204,37 @@ def amostrar_celulas(
         atual.update({"offset": 0, "total_celulas": 0, "amostradas": 0})
         return [], atual
 
+    estrategia = str(matriz.get("estrategia") or "sequencial").lower()
+    datas_por_rota = int(matriz.get("datas_por_rota_por_rodada") or 3)
+    offset = int(atual.get("offset") or 0)
+
     if not matriz.get("rotacao", True):
-        amostra = celulas[:limite]
+        if estrategia == "espalhada":
+            amostra = amostrar_espalhada(celulas, limite, datas_por_rota, offset=0)
+        else:
+            amostra = celulas[:limite]
         atual.update(
             {
                 "offset": 0,
                 "total_celulas": total,
                 "amostradas": len(amostra),
                 "cobertura_pct": round(100 * len(amostra) / total, 1),
+                "estrategia": estrategia,
             }
         )
         return amostra, atual
 
-    offset = int(atual.get("offset") or 0) % total
-    amostra = []
-    for i in range(min(limite, total)):
-        amostra.append(celulas[(offset + i) % total])
-    novo_offset = (offset + len(amostra)) % total if avancar else offset
+    if estrategia == "espalhada":
+        amostra = amostrar_espalhada(celulas, limite, datas_por_rota, offset)
+        # Avança a fase das datas para a próxima rodada cobrir outros pontos da janela.
+        novo_offset = (offset + 1) % max(datas_por_rota, 1) if avancar else offset
+    else:
+        offset = offset % total
+        amostra = []
+        for i in range(min(limite, total)):
+            amostra.append(celulas[(offset + i) % total])
+        novo_offset = (offset + len(amostra)) % total if avancar else offset
+
     atual.update(
         {
             "offset": novo_offset,
@@ -160,6 +242,7 @@ def amostrar_celulas(
             "total_celulas": total,
             "amostradas": len(amostra),
             "cobertura_pct": round(100 * len(amostra) / total, 1),
+            "estrategia": estrategia,
         }
     )
     return amostra, atual

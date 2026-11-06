@@ -50,13 +50,57 @@ class MatrizTest(unittest.TestCase):
 
     def test_rotacao_avanca_offset(self):
         celulas = [{"id": i} for i in range(10)]
-        config = {"matriz": {"max_celulas_por_rodada": 3, "rotacao": True}}
+        config = {"matriz": {"max_celulas_por_rodada": 3, "rotacao": True, "estrategia": "sequencial"}}
         amostra1, estado1 = matriz.amostrar_celulas(celulas, config, {"offset": 0}, avancar=True)
         self.assertEqual([c["id"] for c in amostra1], [0, 1, 2])
         self.assertEqual(estado1["offset"], 3)
         amostra2, estado2 = matriz.amostrar_celulas(celulas, config, estado1, avancar=True)
         self.assertEqual([c["id"] for c in amostra2], [3, 4, 5])
         self.assertEqual(estado2["offset"], 6)
+
+    def test_janela_meses_a_frente(self):
+        from datetime import datetime
+
+        janela = {"meses_a_frente": 6}
+        idas = matriz.datas_ida(janela, passo=30, hoje=datetime(2026, 11, 6))
+        self.assertGreaterEqual(len(idas), 6)
+        self.assertEqual(idas[0], "2026-11-07")
+        self.assertLessEqual(idas[-1], "2027-05-10")
+
+    def test_amostra_espalhada_cobre_varias_rotas_e_datas(self):
+        config = {
+            "janela": {"ida_inicio": "2027-01-01", "ida_fim": "2027-03-01"},
+            "matriz": {
+                "passo_ida_dias": 7,
+                "estadias": [7],
+                "max_celulas_por_rodada": 20,
+                "datas_por_rota_por_rodada": 3,
+                "estrategia": "espalhada",
+                "rotacao": True,
+            },
+            "grupos": [
+                {"nome": "T", "origens": ["GRU", "SLZ"], "destinos": ["LIS", "EZE"]},
+            ],
+            "origens_brasil": ["GRU", "SLZ"],
+            "cidades": {
+                "GRU": "São Paulo",
+                "SLZ": "São Luís",
+                "LIS": "Lisboa",
+                "EZE": "Buenos Aires",
+            },
+        }
+        celulas = matriz.gerar_celulas(config)
+        amostra, estado = matriz.amostrar_celulas(celulas, config, {"offset": 0}, avancar=True)
+        rotas = {(c["origem"], c["destino"]) for c in amostra}
+        self.assertEqual(rotas, {("GRU", "LIS"), ("GRU", "EZE"), ("SLZ", "LIS"), ("SLZ", "EZE")})
+        # 4 rotas × até 3 datas = até 12 células nesta config
+        self.assertGreaterEqual(len(amostra), 8)
+        self.assertEqual(estado["estrategia"], "espalhada")
+        idas_por_rota = {}
+        for c in amostra:
+            idas_por_rota.setdefault((c["origem"], c["destino"]), set()).add(c["data_ida"])
+        for idas in idas_por_rota.values():
+            self.assertGreaterEqual(len(idas), 2)
 
 
 class BaselineTest(unittest.TestCase):

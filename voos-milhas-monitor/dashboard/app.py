@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
-ORIGENS_BRASIL = {"GRU", "CGH", "VCP", "CNF"}
+ORIGENS_BRASIL = {"GRU", "CGH", "VCP", "CNF", "SLZ"}
 
 LUGARES = {
     "MAD": ("Madri", "Espanha", "🇪🇸", "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=480&q=70"),
@@ -42,6 +42,7 @@ LUGARES = {
     "YUL": ("Montreal", "Canadá", "🇨🇦", "https://images.unsplash.com/photo-1519178614-68673b201f36?auto=format&fit=crop&w=480&q=70"),
     "YQB": ("Quebec", "Canadá", "🇨🇦", "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?auto=format&fit=crop&w=480&q=70"),
     "MCO": ("Orlando", "Estados Unidos", "🇺🇸", "https://images.unsplash.com/photo-1575089776834-8be34696ffb9?auto=format&fit=crop&w=480&q=70"),
+    "SLZ": ("São Luís", "Brasil", "🇧🇷", "https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&w=480&q=70"),
 }
 
 # Uma página só: alertas de milhas no topo + passagens.
