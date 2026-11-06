@@ -21,6 +21,9 @@ nano .env  # Adicionar KIWI_API_KEY
 
 # Testar
 node testar-csv.js
+
+# Dashboard
+cd dashboard && streamlit run app.py
 ```
 
 **Leia [QUICK_START.md](QUICK_START.md) para tutorial completo!**
