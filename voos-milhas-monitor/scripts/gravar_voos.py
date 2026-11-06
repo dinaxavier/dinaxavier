@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Grava no CSV só as cotações que a rotina realmente viu.
+"""Grava no CSV só ida e volta vista, pelo menos 30% abaixo da média vista.
 
-Rotas ausentes em out/cotacoes.json permanecem como estão.
-Não calcula desconto inventado: preço de referência fica igual ao preço visto.
+Rotas ausentes em out/cotacoes.json permanecem se ainda cumprirem a regra.
+Sem a média vista na página, a cotação não entra.
 """
 
 from __future__ import annotations
@@ -91,6 +91,29 @@ def limites_estadia(config: dict) -> tuple[int, int]:
     return int(janela.get("estadia_dias_min", 7)), int(janela.get("estadia_dias_max", 15))
 
 
+def desconto_minimo(config: dict) -> float:
+    return float(config.get("desconto_minimo_percentual", 30))
+
+
+def percentual_abaixo(preco, media) -> float | None:
+    try:
+        preco_f = float(preco)
+        media_f = float(media)
+    except (TypeError, ValueError):
+        return None
+    if preco_f <= 0 or media_f <= 0:
+        return None
+    return (media_f - preco_f) / media_f * 100
+
+
+def media_vista(item: dict):
+    for chave in ("preco_medio", "media", "preco_referencia"):
+        valor = item.get(chave)
+        if valor not in (None, ""):
+            return valor
+    return None
+
+
 def numero(valor, padrao: int | None = None) -> int | None:
     if valor is None or valor == "":
         return padrao
@@ -120,6 +143,7 @@ def linha_de_cotacao(
     origens_brasil: set[str],
     estadia_min: int,
     estadia_max: int,
+    desconto_min: float,
 ) -> dict | None:
     origem = str(item.get("origem") or "").strip().upper()
     destino = str(item.get("destino") or "").strip().upper()
@@ -137,6 +161,11 @@ def linha_de_cotacao(
     dias = estadia_dias(item.get("data_ida"), item.get("data_volta"))
     if dias is None or dias < estadia_min or dias > estadia_max:
         return None
+    media = media_vista(item)
+    desconto = percentual_abaixo(valor, media)
+    if desconto is None or desconto < desconto_min:
+        return None
+    media_f = float(media)
     conexoes_ida = numero(item.get("conexoes_ida"))
     if conexoes_ida is None:
         conexoes_ida = numero(item.get("conexoes"), 0)
@@ -168,9 +197,9 @@ def linha_de_cotacao(
         "data_volta": item.get("data_volta") or "",
         "preco_por_pessoa": preco_txt,
         "preco_total": preco_txt,
-        "preco_referencia": preco_txt,
-        "desconto_percentual": "0",
-        "economia_estimada": "0",
+        "preco_referencia": f"{media_f:.2f}",
+        "desconto_percentual": f"{desconto:.1f}",
+        "economia_estimada": f"{media_f - valor:.2f}",
         "tipo_voo_ida": tipo_ida,
         "tipo_voo_volta": tipo_volta,
         "total_conexoes": str((conexoes_ida or 0) + (conexoes_volta or 0)),
@@ -185,6 +214,11 @@ def linha_de_cotacao(
         "bagagem_incluida": "",
         "link": link_ida_volta(origem, destino, item.get("data_ida") or "", item.get("data_volta") or ""),
     }
+
+
+def dentro_do_desconto(linha: dict, minimo: float) -> bool:
+    desconto = percentual_abaixo(linha.get("preco_por_pessoa"), linha.get("preco_referencia"))
+    return desconto is not None and desconto >= minimo
 
 
 def mesclar(existentes: list[dict], novas: list[dict]) -> list[dict]:
@@ -225,10 +259,17 @@ def gravar(raiz: Path, config: dict, cotacoes: dict, agora: str | None = None) -
     cidades = config.get("cidades", {})
     origens_brasil = {codigo.strip().upper() for codigo in config.get("origens_brasil", [])}
     estadia_min, estadia_max = limites_estadia(config)
+    minimo_desconto = desconto_minimo(config)
     novas = []
     for item in cotacoes.get("itens") or []:
         linha = linha_de_cotacao(
-            item, cidades, momento, origens_brasil, estadia_min, estadia_max
+            item,
+            cidades,
+            momento,
+            origens_brasil,
+            estadia_min,
+            estadia_max,
+            minimo_desconto,
         )
         if linha:
             novas.append(linha)
@@ -238,6 +279,7 @@ def gravar(raiz: Path, config: dict, cotacoes: dict, agora: str | None = None) -
         for linha in mesclar(ler_csv(planilha), novas)
         if (dias := estadia_dias(linha.get("data_ida"), linha.get("data_volta"))) is not None
         and estadia_min <= dias <= estadia_max
+        and dentro_do_desconto(linha, minimo_desconto)
     ]
     escrever_csv(planilha, mescladas)
     stats = estatisticas(mescladas, momento, len(novas))

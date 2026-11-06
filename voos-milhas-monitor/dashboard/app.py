@@ -155,7 +155,8 @@ def css():
         .cartao .base {display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-top: auto; padding-top: 10px;}
         .cartao .preco-linha {display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;}
         .cartao .preco {font-size: 20px; font-weight: 750; color: #0f172a; letter-spacing: -0.3px;}
-        .cartao .antes {color: #94a3b8; text-decoration: line-through; font-size: 12px; font-weight: 500;}
+        .cartao .media {color: #94a3b8; font-size: 12px; font-weight: 500;}
+        .cartao .media s {text-decoration: line-through;}
         .cartao .it {color: #64748b; font-size: 12px; margin-top: 2px;}
         .link-voo {
             display: inline-block; color: #475569; background: #f8fafc;
@@ -263,15 +264,21 @@ def itinerario(voo):
     return " · ".join(partes)
 
 
-def limites_estadia():
+def ler_config():
     caminho = os.path.join(os.path.dirname(__file__), "..", "config-rotina.json")
-    minimo, maximo = 7, 15
-    if os.path.exists(caminho):
-        with open(caminho, encoding="utf-8") as arquivo:
-            janela = json.load(arquivo).get("janela", {})
-        minimo = int(janela.get("estadia_dias_min", minimo))
-        maximo = int(janela.get("estadia_dias_max", maximo))
-    return minimo, maximo
+    if not os.path.exists(caminho):
+        return {}
+    with open(caminho, encoding="utf-8") as arquivo:
+        return json.load(arquivo)
+
+
+def limites_estadia():
+    janela = ler_config().get("janela", {})
+    return int(janela.get("estadia_dias_min", 7)), int(janela.get("estadia_dias_max", 15))
+
+
+def desconto_minimo():
+    return float(ler_config().get("desconto_minimo_percentual", 30))
 
 
 @st.cache_data(ttl=300)
@@ -295,6 +302,10 @@ def carregar_dados(data_dir):
         volta = pd.to_datetime(voos["data_volta"], errors="coerce")
         dias = (volta - ida).dt.days
         voos = voos[dias.between(minimo, maximo)].copy()
+        referencia = voos["preco_referencia"]
+        preco = voos["preco_por_pessoa"]
+        voos["desconto_percentual"] = (referencia - preco) / referencia.replace(0, pd.NA) * 100
+        voos = voos[voos["desconto_percentual"] >= desconto_minimo()].copy()
     milhas_path = os.path.join(data_dir, "milhas_ativas.csv")
     if os.path.exists(milhas_path):
         milhas = pd.read_csv(milhas_path)
@@ -364,8 +375,8 @@ def cartao(voo):
     referencia = voo.get("preco_referencia")
     preco = voo.get("preco_por_pessoa")
     antes = ""
-    if pd.notna(referencia) and pd.notna(preco) and abs(float(referencia) - float(preco)) > 1:
-        antes = f'<span class="antes">{reais(referencia)}</span>'
+    if pd.notna(referencia) and pd.notna(preco) and float(referencia) > float(preco):
+        antes = f'<span class="media">média <s>{reais(referencia)}</s></span>'
     link = link_ida_volta(
         texto(voo.get("origem")),
         texto(voo.get("destino")),
@@ -404,7 +415,9 @@ def passagens(voos):
         unsafe_allow_html=True,
     )
     if voos.empty:
-        st.info("Aguardando a primeira rodada com preços vistos nas páginas de busca.")
+        st.info(
+            f"Nenhuma passagem de ida e volta está pelo menos {desconto_minimo():.0f}% abaixo da média."
+        )
         return
     destaques = voos.sort_values("score", ascending=False).head(3)
     colunas = st.columns(3)
@@ -481,7 +494,10 @@ def passagens(voos):
         + "</tbody></table>",
         unsafe_allow_html=True,
     )
-    st.caption(f"{len(filtrados)} oportunidades. Saída sempre de um aeroporto no Brasil.")
+    st.caption(
+        f"{len(filtrados)} passagens de ida e volta, pelo menos {desconto_minimo():.0f}% abaixo da média. "
+        "Saída sempre de um aeroporto no Brasil."
+    )
 
 
 def milhas(tabela):
@@ -525,8 +541,9 @@ def configuracoes():
     janela = config.get("janela", {})
     st.write(
         "A busca não roda sozinha. Em Atualizar dados, a tabela recarrega o arquivo salvo. "
-        f"Quando uma busca nova for pedida, a estadia é de {janela.get('estadia_dias_min', 7)} "
-        f"a {janela.get('estadia_dias_max', 15)} dias."
+        f"Quando uma busca nova for pedida, entra só ida e volta de {janela.get('estadia_dias_min', 7)} "
+        f"a {janela.get('estadia_dias_max', 15)} dias, com o preço pelo menos "
+        f"{config.get('desconto_minimo_percentual', 30):.0f}% abaixo da média vista na página."
     )
     for grupo in config.get("grupos", []):
         st.markdown(

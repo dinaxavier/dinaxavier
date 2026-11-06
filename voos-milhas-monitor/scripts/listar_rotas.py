@@ -42,7 +42,11 @@ def rotas(config: dict) -> list[dict]:
 def main() -> int:
     config = carregar()
     itens = rotas(config)
-    print(f"{len(itens)} rotas. Janela {config['janela']['ida_inicio']} a {config['janela']['ida_fim']}.")
+    minimo = config.get("desconto_minimo_percentual", 30)
+    print(
+        f"{len(itens)} rotas. Janela {config['janela']['ida_inicio']} a {config['janela']['ida_fim']}. "
+        f"Ida e volta, pelo menos {minimo:.0f}% abaixo da média."
+    )
     for item in itens:
         print(
             f"{item['grupo']}\t{item['origem']} {item['cidade_origem']} → "
