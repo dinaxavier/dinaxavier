@@ -1,5 +1,14 @@
 # 📋 Changelog - Monitor de Voos e Milhas
 
+## [3.2.0] - 2026-11-06
+
+### Dashboard em página única + milhas automáticas
+
+- Remove milhas, combinadas, histórico e config da navegação — fica só o radar de passagens.
+- Balões de promoção no topo, alimentados automaticamente.
+- `scripts/buscar_promocoes_milhas.py` varre feeds (Passageiro de Primeira / Melhores Destinos) filtrando os programas de `config-milhas.json`.
+- Botão **Atualizar dados** e a 1ª carga (CSV velho) disparam a coleta.
+
 ## [3.1.0] - 2026-11-06
 
 ### Dashboard: aviso de milhas no topo

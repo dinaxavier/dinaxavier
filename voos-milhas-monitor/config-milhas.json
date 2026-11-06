@@ -1,6 +1,12 @@
 {
   "descricao": "Programas monitorados para o aviso de promoção no topo do dashboard. A promoção ativa fica em data/milhas_ativas.csv.",
   "arquivo_promocoes": "data/milhas_ativas.csv",
+  "feeds": [
+    "https://passageirodeprimeira.com/feed/",
+    "https://passageirodeprimeira.com/category/promocoes/feed/",
+    "https://passageirodeprimeira.com/tag/bonus/feed/",
+    "https://www.melhoresdestinos.com.br/feed"
+  ],
   "programas": [
     {
       "id": "smiles",

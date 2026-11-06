@@ -44,13 +44,7 @@ LUGARES = {
     "MCO": ("Orlando", "Estados Unidos", "🇺🇸", "https://images.unsplash.com/photo-1575089776834-8be34696ffb9?auto=format&fit=crop&w=480&q=70"),
 }
 
-PAGINAS = [
-    ("inicio", "Início"),
-    ("passagens", "Passagens Aéreas"),
-    ("combinadas", "Oportunidades Combinadas"),
-    ("historico", "Histórico e Tendências"),
-    ("config", "Configurações"),
-]
+# Uma página só: alertas de milhas no topo + passagens.
 
 
 def css():
@@ -230,13 +224,6 @@ def obter_data_dir():
     return "./data"
 
 
-def pagina_atual():
-    valor = st.query_params.get("pagina", "inicio")
-    if isinstance(valor, list):
-        valor = valor[0] if valor else "inicio"
-    return valor if valor in {item[0] for item in PAGINAS} else "inicio"
-
-
 def texto(valor, padrao=""):
     if valor is None or (isinstance(valor, float) and pd.isna(valor)):
         return padrao
@@ -357,30 +344,56 @@ def carregar_dados(data_dir):
     return voos, milhas, stats
 
 
-def nav(ativa):
-    itens = []
-    for chave, rotulo in PAGINAS:
-        classe = "ativo" if chave == ativa or (ativa == "inicio" and chave == "passagens") else ""
-        if chave == "passagens" and ativa == "inicio":
-            classe = "ativo"
-        itens.append(f'<a class="{classe}" href="?pagina={chave}">{rotulo}</a>')
+def nav():
     st.markdown(
-        f"""
+        """
         <div class="nav-fixa">
           <div class="marca">
             <div class="marca-icone">✈</div>
             <div><b>Radar de<br>Voos & Milhas</b></div>
           </div>
-          {''.join(itens)}
+          <a class="ativo" href="?">Passagens</a>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
+def caminho_script_milhas() -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts", "buscar_promocoes_milhas.py"))
+
+
+def atualizar_promocoes_milhas() -> tuple[bool, str]:
+    script = caminho_script_milhas()
+    if not os.path.exists(script):
+        return False, "Script de milhas não encontrado."
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            [sys.executable, script],
+            capture_output=True,
+            text=True,
+            timeout=90,
+            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+        )
+    except subprocess.TimeoutExpired:
+        return False, "A busca de promoções de milhas demorou demais."
+    if proc.returncode != 0:
+        detalhe = (proc.stderr or proc.stdout or "erro desconhecido").strip()
+        return False, f"Falha ao buscar milhas: {detalhe[:240]}"
+    linha = (proc.stdout or "").strip().splitlines()
+    return True, (linha[0] if linha else "Promoções de milhas atualizadas.")
+
+
 def atualizar_dados():
     st.markdown('<div class="atualizar-ancora"></div>', unsafe_allow_html=True)
     if st.button("Atualizar dados"):
+        ok, mensagem = atualizar_promocoes_milhas()
+        if ok:
+            st.toast(mensagem)
+        else:
+            st.warning(mensagem)
         st.cache_data.clear()
         st.rerun()
 
@@ -395,16 +408,6 @@ def hero():
         """,
         unsafe_allow_html=True,
     )
-
-
-def pills(ativa):
-    mapa = [("passagens", "Passagens Aéreas"), ("combinadas", "Oportunidades Combinadas")]
-    atual = "passagens" if ativa == "inicio" else ativa
-    html = []
-    for chave, rotulo in mapa:
-        classe = "ativo" if chave == atual else ""
-        html.append(f'<a class="{classe}" href="?pagina={chave}">{rotulo}</a>')
-    st.markdown(f'<div class="pills">{"".join(html)}</div>', unsafe_allow_html=True)
 
 
 def promocao_ativa(linha) -> bool:
@@ -602,79 +605,28 @@ def passagens(voos):
     )
 
 
-def combinadas():
-    st.markdown('<div class="secao"><h2>Oportunidades Combinadas</h2></div>', unsafe_allow_html=True)
-    st.info("A comparação entre comprar milhas e emitir, ou pagar a passagem em dinheiro, entra quando houver preço de milheiro e preço da passagem na mesma rota.")
-
-
-def historico(data_dir):
-    st.markdown('<div class="secao"><h2>Histórico e Tendências</h2></div>', unsafe_allow_html=True)
-    caminho = os.path.join(data_dir, "historico.csv")
-    if not os.path.exists(caminho):
-        st.info("O histórico passa a ser preenchido quando uma rota deixa de aparecer na rodada seguinte.")
-        return
-    st.dataframe(pd.read_csv(caminho), use_container_width=True, hide_index=True)
-
-
-def ler_programas_milhas():
-    caminho = os.path.join(os.path.dirname(__file__), "..", "config-milhas.json")
-    if not os.path.exists(caminho):
-        return []
-    try:
-        return json.load(open(caminho, encoding="utf-8")).get("programas") or []
-    except (json.JSONDecodeError, OSError):
-        return []
-
-
-def configuracoes():
-    st.markdown('<div class="secao"><h2>Configurações</h2></div>', unsafe_allow_html=True)
-    caminho = os.path.join(os.path.dirname(__file__), "..", "config-rotina.json")
-    if not os.path.exists(caminho):
-        st.info("Arquivo de rotas não encontrado.")
-        return
-    config = json.load(open(caminho, encoding="utf-8"))
-    janela = config.get("janela", {})
-    alerta = config.get("alerta") or {}
-    desconto = alerta.get("desconto_minimo_percentual", config.get("desconto_minimo_percentual", 25))
-    st.write(
-        "A busca não roda sozinha. Em Atualizar dados, a tabela recarrega o arquivo salvo. "
-        f"Quando uma busca nova for pedida, entra só ida e volta de {janela.get('estadia_dias_min', 7)} "
-        f"a {janela.get('estadia_dias_max', 15)} dias, com o preço pelo menos "
-        f"{float(desconto):.0f}% abaixo do baseline."
-    )
-    for grupo in config.get("grupos", []):
-        st.markdown(
-            f"**{grupo['nome']}**  \n"
-            f"Sai de {', '.join(grupo['origens'])} para {', '.join(grupo['destinos'])}."
-        )
-    programas = ler_programas_milhas()
-    if programas:
-        st.markdown("**Programas no aviso de milhas**")
-        nomes = ", ".join(p.get("nome") or p.get("id") for p in programas)
-        st.write(
-            f"Monitorados: {nomes}. "
-            "Quando houver promoção ativa em `data/milhas_ativas.csv`, o aviso aparece no topo."
-        )
+def milhas_desatualizadas(data_dir: str) -> bool:
+    caminho = os.path.join(data_dir, "milhas_ativas.csv")
+    if not os.path.exists(caminho) or os.path.getsize(caminho) < 40:
+        return True
+    idade_h = (datetime.now().timestamp() - os.path.getmtime(caminho)) / 3600
+    return idade_h >= 6
 
 
 def main():
     css()
-    ativa = pagina_atual()
-    nav(ativa)
+    nav()
     atualizar_dados()
     data_dir = obter_data_dir()
+    # Na primeira carga (ou CSV velho), busca promoções automaticamente uma vez por sessão.
+    if milhas_desatualizadas(data_dir) and not st.session_state.get("milhas_buscadas"):
+        st.session_state["milhas_buscadas"] = True
+        atualizar_promocoes_milhas()
+        st.cache_data.clear()
     voos, tabela_milhas, _ = carregar_dados(data_dir)
     alertas_milhas(tabela_milhas)
     hero()
-    pills(ativa)
-    if ativa in {"inicio", "passagens"}:
-        passagens(voos)
-    elif ativa == "combinadas":
-        combinadas()
-    elif ativa == "historico":
-        historico(data_dir)
-    else:
-        configuracoes()
+    passagens(voos)
 
 
 main()
